@@ -2,6 +2,7 @@ package utilities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -12,20 +13,19 @@ import org.apache.commons.math3.util.Pair;
 import kernel.Item;
 
 
-public class ProbabilityTools{
+public class ProbabilityTools<T>{
 
-	EnumeratedDistribution<Item> distrib;;
 	double total;
-	HashMap<Item,Double> indexes;
-	List<Item> items;
+	HashMap<T,Double> indexes;
+	List<T> items;
 
 
-	public ProbabilityTools(List<Item> items_) {
+	public ProbabilityTools(List<T> items_) {
 		
 		items=items_;
 		total=items.size()/100;
-		indexes= new HashMap<Item,Double>();
-		for(Item a: items){
+		indexes= new HashMap<T,Double>();
+		for(T a: items){
 			
 			indexes.put(a, items.indexOf(a)/total);
 		}
@@ -50,55 +50,80 @@ public class ProbabilityTools{
 	}
 
 
-	EnumeratedDistribution<Item> getGaussianDistribution(double u){
+	EnumeratedDistribution<T> getGaussianDistribution(double u){
+		
+		return getGaussianDistribution(u, indexes);
+	}
+	
+	EnumeratedDistribution<T> getGaussianDistribution(double u, HashMap<T,Double> map){
 		
 		double uCorrect=u/total;
-		Iterator<Entry<Item, Double>> iter = indexes.entrySet().iterator();
-		ArrayList<Pair<Item,Double>> list= new ArrayList<Pair<Item, Double>>();
+		Iterator<Entry<T, Double>> iter = map.entrySet().iterator();
+		ArrayList<Pair<T,Double>> list= new ArrayList<Pair<T, Double>>();
 		
 		while(iter.hasNext()){
-			Entry<Item,Double> entry=(Entry<Item,Double>) iter.next();
-			double value=gaussianFunction(entry.getValue(), u);
-			list.add(new Pair<Item, Double>(entry.getKey(), value));
+			Entry<T,Double> entry=(Entry<T,Double>) iter.next();
+			double value=gaussianFunction(entry.getValue(), uCorrect);
+			list.add(new Pair<T, Double>(entry.getKey(), value));
 		}
 		
 		
-		return new EnumeratedDistribution<Item>(list);
+		return new EnumeratedDistribution<T>(list);
+	}
+	
+	EnumeratedDistribution<T> getLinearDistribution(){
+		
+	return getLinearDistribution(indexes);
 	}
 	
 	
-	EnumeratedDistribution<Item> getLinearDistribution(){
+EnumeratedDistribution<T> getLinearDistribution(HashMap<T,Double> map){
 		
-		Iterator<Entry<Item, Double>> iter = indexes.entrySet().iterator();
-		ArrayList<Pair<Item,Double>> list= new ArrayList<Pair<Item, Double>>();
+		Iterator<Entry<T, Double>> iter = map.entrySet().iterator();
+		ArrayList<Pair<T,Double>> list= new ArrayList<Pair<T, Double>>();
 		
 		while(iter.hasNext()){
-			Entry<Item,Double> entry=(Entry<Item,Double>) iter.next();
+			Entry<T,Double> entry=(Entry<T,Double>) iter.next();
 			double value=linearFunction(entry.getValue());
-			list.add(new Pair<Item, Double>(entry.getKey(), value));
+			list.add(new Pair<T, Double>(entry.getKey(), value));
 		}
 		
-		return new EnumeratedDistribution<Item>(list);
+		return new EnumeratedDistribution<T>(list);
 	}
+
+
 	
-	ArrayList<Item> sampleWithoutReplacement(int sampleSize, EnumeratedDistribution<Item> distrib) {
+	ArrayList<T> sampleWithoutReplacement(int sampleSize, EnumeratedDistribution<T> distrib) {
+		
+		
 
-		ArrayList<Item> result = new ArrayList<Item>();
+		HashSet<T> result = new HashSet<T>();
+		HashMap<T,Double> map = distrib.getHashPmf();
+		if (sampleSize > map.size()) return null;
+		int updatedSampleSize=sampleSize;
 
-		for (int i = 0; i < sampleSize; i++) {
-
-			Item sample = distrib.sample();
-
-			while (!result.contains(sample)) {
-				sample = distrib.sample();
+		while(result.size()!=sampleSize){
+			
+			for (int i = 0; i < updatedSampleSize; i++) {
+				result.add(distrib.sample());
 			}
-
-			result.add(sample);
-
+			
+			updatedSampleSize=sampleSize-result.size();
+			Iterator<T> iter=result.iterator();
+			while(iter.hasNext()){
+				map.remove(iter.next());
+			}
+			
+			distrib= new EnumeratedDistribution<T>(map);
+			
+			
+			
 		}
 
-		return result;
+		return new ArrayList<T>(result);
 
 	}
+	
+	
 
 }

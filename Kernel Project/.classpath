@@ -7,7 +7,7 @@
 			<attribute name="javadoc_location" value="jar:file:/C:/gurobi752/win64/lib/gurobi-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/BACKUP/Desktop/commons-math3-3.6.1/commons-math3-3.6.1.jar" sourcepath="C:/Users/BACKUP/Desktop/commons-math3-3.6.1/commons-math3-3.6.1-sources.jar">
+	<classpathentry kind="lib" path="C:/Users/BACKUP/Desktop/commons-math3-3.6.1/sourcesmod/sourcesmod-compiled.jar" sourcepath="C:/Users/BACKUP/Desktop/commons-math3-3.6.1/sourcesmod/sourcesmod.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:file:/C:/Users/BACKUP/Desktop/commons-math3-3.6.1/commons-math3-3.6.1-javadoc.jar!/"/>
 		</attributes>

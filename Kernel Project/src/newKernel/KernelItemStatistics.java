@@ -1,13 +1,13 @@
 package newKernel;
 
-public class ItemStatistics {
+public class KernelItemStatistics {
 
 	
 	short timesDisabled;
 	
 
 	
-	public ItemStatistics() {
+	public KernelItemStatistics() {
 
 		
 		timesDisabled=0;

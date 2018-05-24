@@ -9,14 +9,14 @@ import kernel.Solution;
 
 public class KernelAnalyzer {
 
-	HashMap<Item, ItemStatistics> itemMap;
+	HashMap<Item, KernelItemStatistics> itemMap;
 	final int TIMES_TO_DROP;
 
 	public KernelAnalyzer(ArrayList<Item> startItemList, int times_to_drop, Solution sol) {
 	
 		
 		TIMES_TO_DROP=times_to_drop;
-		itemMap=new HashMap<Item, ItemStatistics>();
+		itemMap=new HashMap<Item, KernelItemStatistics>();
 		update(startItemList, sol);
 	}
 	
@@ -25,10 +25,10 @@ public class KernelAnalyzer {
 	ArrayList<Item> analyze(){
 		
 		ArrayList<Item> itemsToDrop = new ArrayList<Item>();
-		Iterator<Entry<Item,ItemStatistics>> iter = itemMap.entrySet().iterator();
+		Iterator<Entry<Item,KernelItemStatistics>> iter = itemMap.entrySet().iterator();
 		
 		while(iter.hasNext()){
-			Entry<Item,ItemStatistics> entry = iter.next();
+			Entry<Item,KernelItemStatistics> entry = iter.next();
 			if(entry.getValue().getTimesDisabled()>=TIMES_TO_DROP){
 				itemsToDrop.add(entry.getKey());
 				itemMap.remove(entry.getKey());
@@ -46,7 +46,7 @@ public class KernelAnalyzer {
 		for(Item a: itemsInKernel){
 			
 			if(!itemMap.containsKey(a)){
-				itemMap.put(a, new ItemStatistics());
+				itemMap.put(a, new KernelItemStatistics());
 			}
 			
 			if(sol.getVarValue(a.getName())==0){

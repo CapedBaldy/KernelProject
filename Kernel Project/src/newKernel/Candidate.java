@@ -8,10 +8,11 @@ public class Candidate {
 	ArrayList<Bucket> currentVersion;
 	ArrayList<Bucket> oldVersion;
 	int startPosition;
+	int arrayLength;
 	int nextAdiacentBucket;
 	int addedBucketsCount;
 	
-	public Candidate(Bucket item, int position){
+	public Candidate(Bucket item, int position, int arrayLenght){
 		currentVersion=new ArrayList<Bucket>();
 		currentVersion.add(item);
 		startPosition=position;
@@ -32,7 +33,9 @@ public class Candidate {
 		
 
 		if(nextAdiacentBucket % 2 == 0){
+			if(startPosition==arrayLength-1) return this.getNextAdiacentPosition();
 			return startPosition+nextAdiacentBucket/2;
+			
 		}
 		else {
 			if(startPosition==0) return this.getNextAdiacentPosition();
@@ -52,6 +55,11 @@ public class Candidate {
 
 	public ArrayList<Bucket> getOldVersion() {
 		return oldVersion;
+	}
+
+
+	public int getAddedBucketsCount() {
+		return addedBucketsCount;
 	}
 	
 	

@@ -11,13 +11,15 @@ public class Candidate {
 	int arrayLength;
 	int nextAdiacentBucket;
 	int addedBucketsCount;
+	Bucket originalBucket;
 	
-	public Candidate(Bucket item, int position, int arrayLenght){
+	public Candidate(Bucket bucket, int position, int arrayLenght){
 		currentVersion=new ArrayList<Bucket>();
-		currentVersion.add(item);
+		currentVersion.add(bucket);
 		startPosition=position;
 		nextAdiacentBucket=1;
 		addedBucketsCount=1;
+		originalBucket=bucket;
 	}
 
 

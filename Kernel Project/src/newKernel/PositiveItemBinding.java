@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-public class ItemBinding {
+public class PositiveItemBinding {
 	
 	short timesActive;
 	short timesExtracted;
@@ -19,11 +19,11 @@ public class ItemBinding {
 	HashMap<Double,Short> valuesOfItemA;
 	HashMap<Double,Short> valuesOfItemB;
 	
-	public ItemBinding(Item itemA, Item itemB){
+	public PositiveItemBinding(Item itemA, Item itemB){
 		this.itemA=itemA;
 		this.itemB=itemB;
 
-		timesActive=0;
+		timesActive=1;
 		timesExtracted=1;
 		valuesOfItemA= new HashMap<Double,Short>();
 		valuesOfItemB= new HashMap<Double,Short>();
@@ -47,10 +47,12 @@ public class ItemBinding {
 	void incrementValueCount(Item item, double value){
 		
 		if(item==itemA){
+			if(valuesOfItemA.get(value)==null) valuesOfItemA.put(value, (short) 0);
 			Short count=valuesOfItemA.get(value);
 			if(count!=null) count++;
 			
 		}else {
+			if(valuesOfItemB.get(value)==null) valuesOfItemB.put(value, (short) 0);
 			Short count=valuesOfItemB.get(value);
 			if(count!=null) count++;
 			

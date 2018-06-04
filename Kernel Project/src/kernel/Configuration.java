@@ -13,6 +13,14 @@ public class Configuration
 	private int timeLimitKernel;
 	private int numIterations;
 	private int timeLimitBucket;
+	private int wastedIterLimit;
+	private double extractionPerc;
+	private int poolTimeLimit;
+	private int activeThreshold;
+	private int negativeThreshold;
+	private int fixedThreshold;
+	private double percThreshold;
+	private int poolTabooCounter;
 
 	public BucketBuilder getBucketBuilder()
 	{
@@ -133,4 +141,71 @@ public class Configuration
 	{
 		this.timeLimitKernel = timeLimitKernel;
 	}
+
+	public int getWastedIterLimit() {
+		return wastedIterLimit;
+	}
+
+	public double getExtractionPerc() {
+		return extractionPerc;
+	}
+
+	public int getPoolTimeLimit() {
+		return poolTimeLimit;
+	}
+
+	public int getActiveThreshold() {
+		return activeThreshold;
+	}
+
+	public int getNegativeThreshold() {
+		return negativeThreshold;
+	}
+
+	public int getFixedThreshold() {
+		return fixedThreshold;
+	}
+
+	public void setWastedIterLimit(int wastedIterLimit) {
+		this.wastedIterLimit = wastedIterLimit;
+	}
+
+	public void setExtractionPerc(double extractionPerc) {
+		this.extractionPerc = extractionPerc;
+	}
+
+	public void setPoolTimeLimit(int poolTimeLimit) {
+		this.poolTimeLimit = poolTimeLimit;
+	}
+
+	public void setActiveThreshold(int activeThreshold) {
+		this.activeThreshold = activeThreshold;
+	}
+
+	public void setNegativeThreshold(int negativeThreshold) {
+		this.negativeThreshold = negativeThreshold;
+	}
+
+	public void setFixedThreshold(int fixedThreshold) {
+		this.fixedThreshold = fixedThreshold;
+	}
+
+	public double getPercThreshold() {
+		return percThreshold;
+	}
+
+	public void setPercThreshold(double percThreshold) {
+		this.percThreshold = percThreshold;
+	}
+
+	public int getPoolTabooCounter() {
+		return poolTabooCounter;
+	}
+
+	public void setPoolTabooCounter(int poolTabooCounter) {
+		this.poolTabooCounter = poolTabooCounter;
+	}
+	
+	
+	
 }

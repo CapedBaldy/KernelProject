@@ -41,6 +41,31 @@ public class ConfigurationReader
         		case "TIMELIMIT":
         			config.setTimeLimit(Integer.parseInt(splitLine[1]));
         			break;
+        		case "POOLTIMELIMIT":
+        			config.setPoolTimeLimit(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "WASTEDITERLIMIT":
+        			config.setWastedIterLimit(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "ACTIVETHRESHOLD":
+        			config.setActiveThreshold(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "NEGATIVETHRESHOLD":
+        			config.setNegativeThreshold(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "POOLTABOOCOUNTER":
+        			config.setPoolTabooCounter(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "FIXEDTHRESHOLD":
+        			config.setFixedThreshold(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "EXTRACTIONPERC":
+        			config.setExtractionPerc(Double.parseDouble(splitLine[1]));
+        			break;
+        		case "PERCTHRESHOLD":
+        			config.setPercThreshold(Double.parseDouble(splitLine[1]));
+        			break;
+        			
         		case "SORTER":
         			switch(Integer.parseInt(splitLine[1]))
         			{

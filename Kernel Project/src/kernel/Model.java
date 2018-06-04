@@ -244,4 +244,30 @@ public class Model
 	{
 		model.setCallback(callback);
 	}
+	
+	public void setContinuous(List<Item> list){
+		try
+		{
+			for(Item it : list)
+			{
+				model.getVarByName(it.getName()).set(GRB.CharAttr.VType, GRB.CONTINUOUS);
+				model.update();
+			}
+		}catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+	
+	public void setFixedValue(Item item, Double value){
+		
+		try{
+			model.addConstr(model.getVarByName(item.getName()), GRB.EQUAL, value, "FIX_VAR_"+item.getName());
+			model.update();
+			
+		}catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
 }

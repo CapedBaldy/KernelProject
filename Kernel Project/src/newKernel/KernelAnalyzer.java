@@ -22,7 +22,7 @@ public class KernelAnalyzer {
 	
 	
 	
-	ArrayList<Item> analyze(){
+	ArrayList<Item> analyze(){    //restituisce gli item da droppare e li toglie dalla map
 		
 		ArrayList<Item> itemsToDrop = new ArrayList<Item>();
 		Iterator<Entry<Item,KernelItemStatistics>> iter = itemMap.entrySet().iterator();
@@ -41,7 +41,7 @@ public class KernelAnalyzer {
 	}
 	
 	
-	void update(ArrayList<Item> itemsInKernel, Solution sol){
+	void update(ArrayList<Item> itemsInKernel, Solution sol){  //mette nuovi item di nuova kernel in vecchia e al contempo aggiorna le statistiche
 		
 		for(Item a: itemsInKernel){
 			

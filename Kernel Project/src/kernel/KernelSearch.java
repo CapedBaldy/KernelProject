@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import gurobi.GRBCallback;
+import newKernel.KernelAnalyzer;
 
 public class KernelSearch
 {
@@ -24,6 +25,7 @@ public class KernelSearch
 	private int tlimBucket;
 	private int numIterations;
 	private GRBCallback callback;
+	private KernelAnalyzer kernelAnalyzer;
 	
 	private Instant startTime;
 	
@@ -142,8 +144,61 @@ public class KernelSearch
 		}	
 	}
 
-	private int getRemainingTime()
+	public int getRemainingTime()
 	{
 		return (int) (tlim - Duration.between(startTime, Instant.now()).getSeconds());
 	}
+
+	public String getInstPath() {
+		return instPath;
+	}
+
+	public String getLogPath() {
+		return logPath;
+	}
+
+	public Configuration getConfig() {
+		return config;
+	}
+
+	public List<Item> getItems() {
+		return items;
+	}
+
+	public KernelBuilder getKernelBuilder() {
+		return kernelBuilder;
+	}
+
+	public int getTlim() {
+		return tlim;
+	}
+
+	public Solution getBestSolution() {
+		return bestSolution;
+	}
+
+	public Kernel getKernel() {
+		return kernel;
+	}
+
+	public int getTlimKernel() {
+		return tlimKernel;
+	}
+
+	public int getTlimBucket() {
+		return tlimBucket;
+	}
+
+	public KernelAnalyzer getKernelAnalyzer() {
+		return kernelAnalyzer;
+	}
+
+	public GRBCallback getCallback() {
+		return callback;
+	}
+	
+	
+	
+	
+	
 }

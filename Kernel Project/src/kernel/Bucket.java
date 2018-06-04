@@ -2,13 +2,21 @@ package kernel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Bucket
+import newKernel.Sample;
+
+public class Bucket implements Sample
 {
 	private List<Item> items;
+	private short tabooCount;
+	private boolean taboo;
+
 	
 	public Bucket()
 	{
 		items = new ArrayList<>();
+		tabooCount=0;
+		taboo=false;
+
 	}
 	
 	public void addItem(Item it)
@@ -43,4 +51,24 @@ public class Bucket
 			}
 		}
 	}
+
+	public short getTabooCount() {
+		return tabooCount;
+	}
+
+	public void setTabooCount(short tabooCount) {
+		this.tabooCount = tabooCount;
+	}
+
+	public boolean isTaboo() {
+		return taboo;
+	}
+
+	public void setTaboo(boolean taboo) {
+		this.taboo = taboo;
+	}
+
+
+	
+	
 }

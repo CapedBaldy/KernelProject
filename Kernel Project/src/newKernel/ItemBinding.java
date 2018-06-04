@@ -7,23 +7,23 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-public class PositiveItemBinding {
+public class ItemBinding {
 	
-	short timesActive;
-	short timesExtracted;
+	private short timesPositive;
+	private short timesExtracted;
+	private short timesNegative;
 
-	Item itemA;
-	Item itemB;
+	private Item itemA;
+	private Item itemB;
 
 	
-	HashMap<Double,Short> valuesOfItemA;
-	HashMap<Double,Short> valuesOfItemB;
+	private HashMap<Double,Short> valuesOfItemA;
+	private HashMap<Double,Short> valuesOfItemB;
 	
-	public PositiveItemBinding(Item itemA, Item itemB){
+	public ItemBinding(Item itemA, Item itemB){
 		this.itemA=itemA;
 		this.itemB=itemB;
 
-		timesActive=1;
 		timesExtracted=1;
 		valuesOfItemA= new HashMap<Double,Short>();
 		valuesOfItemB= new HashMap<Double,Short>();
@@ -31,16 +31,24 @@ public class PositiveItemBinding {
 	}
 	
 	
-	void incrementActiveCount(){
-		timesActive++;
+	void incrementPositiveCount(){
+		timesPositive++;
+	}
+	
+	void incrementNegativeCount(){
+		timesNegative++;
 	}
 	
 	void incrementExtractedCount(){
 		timesExtracted++;
 	}
 	
-	double getActivePercentage(){
-		return timesActive/timesExtracted;
+	double getPositivePercentage(){
+		return timesPositive/timesExtracted;
+	}
+	
+	double getNegativePercentage(){
+		return timesNegative/timesExtracted;
 	}
 	
 	
@@ -49,12 +57,12 @@ public class PositiveItemBinding {
 		if(item==itemA){
 			if(valuesOfItemA.get(value)==null) valuesOfItemA.put(value, (short) 0);
 			Short count=valuesOfItemA.get(value);
-			if(count!=null) count++;
+			count++;
 			
 		}else {
 			if(valuesOfItemB.get(value)==null) valuesOfItemB.put(value, (short) 0);
 			Short count=valuesOfItemB.get(value);
-			if(count!=null) count++;
+			count++;
 			
 		}
 			
@@ -63,7 +71,14 @@ public class PositiveItemBinding {
 	
 	boolean activeBindingCheck(int activeThreshold, double percentage){
 
-		if(timesActive>=activeThreshold&&getActivePercentage()>=percentage) return true;
+		if(timesPositive>=activeThreshold&&getPositivePercentage()>=percentage) return true;
+		return false;
+		
+	}
+	
+	boolean negativeBindingCheck(int negativeThreshold, double percentage){
+
+		if(timesNegative>=negativeThreshold&&getNegativePercentage()>=percentage) return true;
 		return false;
 		
 	}
@@ -90,6 +105,16 @@ public class PositiveItemBinding {
 			return result;
 		}
 		
+	}
+
+
+	public Item getItemA() {
+		return itemA;
+	}
+
+
+	public Item getItemB() {
+		return itemB;
 	}
 
 	

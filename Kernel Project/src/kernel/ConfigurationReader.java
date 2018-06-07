@@ -47,11 +47,8 @@ public class ConfigurationReader
         		case "WASTEDITERLIMIT":
         			config.setWastedIterLimit(Integer.parseInt(splitLine[1]));
         			break;
-        		case "ACTIVETHRESHOLD":
-        			config.setActiveThreshold(Integer.parseInt(splitLine[1]));
-        			break;
-        		case "NEGATIVETHRESHOLD":
-        			config.setNegativeThreshold(Integer.parseInt(splitLine[1]));
+        		case "EXTRACTTHRESHOLD":
+        			config.setExtractThreshold(Integer.parseInt(splitLine[1]));
         			break;
         		case "POOLTABOOCOUNTER":
         			config.setPoolTabooCounter(Integer.parseInt(splitLine[1]));
@@ -59,11 +56,20 @@ public class ConfigurationReader
         		case "FIXEDTHRESHOLD":
         			config.setFixedThreshold(Integer.parseInt(splitLine[1]));
         			break;
+        		case "POSITIVETHRESHOLD":
+        			config.setPositiveThreshold(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "NEGATIVETHRESHOLD":
+        			config.setNegativeThreshold(Integer.parseInt(splitLine[1]));
+        			break;
         		case "EXTRACTIONPERC":
         			config.setExtractionPerc(Double.parseDouble(splitLine[1]));
         			break;
         		case "PERCTHRESHOLD":
         			config.setPercThreshold(Double.parseDouble(splitLine[1]));
+        			break;
+        		case "FIXEDMULTIPLETHRESHOLD":
+        			config.setFixedMultipleThreshold(Integer.parseInt(splitLine[1]));
         			break;
         			
         		case "SORTER":

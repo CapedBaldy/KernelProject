@@ -16,11 +16,13 @@ public class Configuration
 	private int wastedIterLimit;
 	private double extractionPerc;
 	private int poolTimeLimit;
-	private int activeThreshold;
+	private int extractThreshold;
 	private int negativeThreshold;
+	private int positiveThreshold;
 	private int fixedThreshold;
 	private double percThreshold;
 	private int poolTabooCounter;
+	private int fixedMultipleThreshold;
 
 	public BucketBuilder getBucketBuilder()
 	{
@@ -154,13 +156,7 @@ public class Configuration
 		return poolTimeLimit;
 	}
 
-	public int getActiveThreshold() {
-		return activeThreshold;
-	}
 
-	public int getNegativeThreshold() {
-		return negativeThreshold;
-	}
 
 	public int getFixedThreshold() {
 		return fixedThreshold;
@@ -178,13 +174,7 @@ public class Configuration
 		this.poolTimeLimit = poolTimeLimit;
 	}
 
-	public void setActiveThreshold(int activeThreshold) {
-		this.activeThreshold = activeThreshold;
-	}
 
-	public void setNegativeThreshold(int negativeThreshold) {
-		this.negativeThreshold = negativeThreshold;
-	}
 
 	public void setFixedThreshold(int fixedThreshold) {
 		this.fixedThreshold = fixedThreshold;
@@ -204,6 +194,38 @@ public class Configuration
 
 	public void setPoolTabooCounter(int poolTabooCounter) {
 		this.poolTabooCounter = poolTabooCounter;
+	}
+
+	public int getExtractThreshold() {
+		return extractThreshold;
+	}
+
+	public void setExtractThreshold(int extractThreshold) {
+		this.extractThreshold = extractThreshold;
+	}
+
+	public int getNegativeThreshold() {
+		return negativeThreshold;
+	}
+
+	public int getPositiveThreshold() {
+		return positiveThreshold;
+	}
+
+	public void setNegativeThreshold(int negativeThreshold) {
+		this.negativeThreshold = negativeThreshold;
+	}
+
+	public void setPositiveThreshold(int positiveThreshold) {
+		this.positiveThreshold = positiveThreshold;
+	}
+
+	public int getFixedMultipleThreshold() {
+		return fixedMultipleThreshold;
+	}
+
+	public void setFixedMultipleThreshold(int fixedMultipleThreshold) {
+		this.fixedMultipleThreshold = fixedMultipleThreshold;
 	}
 	
 	

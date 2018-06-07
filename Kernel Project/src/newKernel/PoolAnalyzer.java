@@ -1,13 +1,19 @@
 package newKernel;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.distribution.EnumeratedDistribution;
+
 
 import gurobi.GRB;
 import kernel.Item;
@@ -35,11 +41,13 @@ public class PoolAnalyzer {
 	private int wastedIterations; //iterazioni con soluzione minore di bestSolution
 	private int wastedIterLimit;
 	private double extractionPerc;
-	private int activeThreshold;
-	private int negativeThreshold;
+	private int extractThreshold;
 	private int fixedThreshold;
 	private double percThreshold;
 	private int poolTabooCounter;
+	private int negativeThreshold;
+	private int positiveThreshold;
+	private int fixedMultipleThreshold;
 	
 	
 
@@ -53,13 +61,15 @@ public class PoolAnalyzer {
 		timeLimit=mainProcess.getConfig().getPoolTimeLimit();
 		wastedIterLimit=mainProcess.getConfig().getWastedIterLimit();
 		extractionPerc=mainProcess.getConfig().getExtractionPerc();
-		activeThreshold=mainProcess.getConfig().getActiveThreshold();
-		negativeThreshold=mainProcess.getConfig().getNegativeThreshold();
+		extractThreshold=mainProcess.getConfig().getExtractThreshold();
 		percThreshold=mainProcess.getConfig().getPercThreshold();
 		fixedThreshold=mainProcess.getConfig().getFixedThreshold();
 		poolTabooCounter=mainProcess.getConfig().getPoolTabooCounter();
 		itemsWithBindings= new ArrayList<Item>();
 		bestSolution= new Solution();
+		negativeThreshold=mainProcess.getConfig().getNegativeThreshold();
+		positiveThreshold=mainProcess.getConfig().getPositiveThreshold();
+		fixedMultipleThreshold=mainProcess.getConfig().getFixedMultipleThreshold();
 
 		
 	}
@@ -92,29 +102,102 @@ public class PoolAnalyzer {
 			
 			ArrayList<ItemBinding> internalBindings = bindings.searchInternalBinding(samples, itemsWithBindings);
 			
-			for(ItemBinding i: internalBindings){
-				if(i.negativeBindingCheck(negativeThreshold, percThreshold)){
-					if(weightMap.get(i.getItemA())>weightMap.get(i.getItemB())) toDisable.add(i.getItemB());
-					if(weightMap.get(i.getItemA())<weightMap.get(i.getItemB())) toDisable.add(i.getItemA());
-					if(weightMap.get(i.getItemA())==weightMap.get(i.getItemB())) toDisable.add(new Random().nextBoolean()? i.getItemA(): i.getItemB());
+			
 
-				}
+			ArrayList<ItemBinding> SingleNegativeItemBindings= new ArrayList<>(internalBindings.stream().filter(it->it.negativeBindingCheck(extractThreshold, percThreshold)).collect(Collectors.toList()));
+			HashMap<Item, Integer> MultipleNegativeItemBindingsCounter = new HashMap<>();
+			
+			for(ItemBinding i: SingleNegativeItemBindings){
+				if(MultipleNegativeItemBindingsCounter.containsKey(i.getItemA())) MultipleNegativeItemBindingsCounter.replace(i.getItemA(), MultipleNegativeItemBindingsCounter.get(i.getItemA())+1);
+				else MultipleNegativeItemBindingsCounter.put(i.getItemA(), 1);
+				if(MultipleNegativeItemBindingsCounter.containsKey(i.getItemB())) MultipleNegativeItemBindingsCounter.replace(i.getItemB(), MultipleNegativeItemBindingsCounter.get(i.getItemB())+1);
+				else MultipleNegativeItemBindingsCounter.put(i.getItemB(), 1);
+				
 			}
 			
-			ArrayList<ItemBinding> externalBindings = bindings.searchExternalBinding(samples, notSamples, itemsWithBindings);
+			MultipleNegativeItemBindingsCounter.entrySet().stream().filter(it->it.getValue()>=negativeThreshold).forEach(it->toDisable.add(it.getKey()));
 			
-			for(ItemBinding i: externalBindings){
+//			for(ItemBinding i: internalBindings){
+//				if(i.negativeBindingCheck(extractThreshold, percThreshold)){
+////					if(weightMap.get(i.getItemA())>weightMap.get(i.getItemB())) toDisable.add(i.getItemB());
+////					if(weightMap.get(i.getItemA())<weightMap.get(i.getItemB())) toDisable.add(i.getItemA());
+////					if(weightMap.get(i.getItemA())==weightMap.get(i.getItemB())) toDisable.add(new Random().nextBoolean()? i.getItemA(): i.getItemB());
+//					
+//
+//				}
+//			}
+//			
+			ArrayList<ItemBinding> externalBindings = bindings.searchExternalBinding(samples, notSamples, itemsWithBindings);
+			HashMap<Item, ArrayList<ArrayList<Double>>> valuesArraysForItems = new HashMap<>();
+			ArrayList<ItemBinding> SinglePositiveItemBindings= new ArrayList<>();
+			
+			for (ItemBinding i: externalBindings){
 				
 				Item toAdd = (notSamples.contains(i.getItemA()))? i.getItemA() : i.getItemB();
 				ArrayList<Double> fixedvalues=i.fixedBindingCheck(toAdd, fixedThreshold);
 				
 				if(!fixedvalues.isEmpty()) {
-					
-					model.setFixedValue(toAdd, fixedvalues.get(new Random().nextInt(fixedvalues.size())));
-					addedFixedItems.add(toAdd);
+					if (valuesArraysForItems.containsKey(toAdd)) valuesArraysForItems.get(toAdd).add(fixedvalues);
+					else {
+						ArrayList<ArrayList<Double>> temp= new ArrayList<>();
+						temp.add(fixedvalues);
+						valuesArraysForItems.put(toAdd, temp);
+					}
 				}
-				else if(i.activeBindingCheck(activeThreshold, percThreshold)) addedActiveItems.add(toAdd);
+				
+				else if(i.activeBindingCheck(extractThreshold, percThreshold)) SinglePositiveItemBindings.add(i);
+				
 			}
+			
+			Iterator<Item> iter =valuesArraysForItems.keySet().iterator();	
+			
+			while(iter.hasNext()){
+				HashMap<Double, Short> fixedMultipleValues = new HashMap<>();
+				Item entry= iter.next();
+				
+				for(ArrayList<Double> a:valuesArraysForItems.get(entry)){
+					for(Double d: a){
+						if(fixedMultipleValues.containsKey(d)) fixedMultipleValues.replace(d, (short)(fixedMultipleValues.get(d)+1));
+						else fixedMultipleValues.put(d, (short)1);
+					}
+				}
+				
+				try{
+				
+					Entry<Double, Short> value=fixedMultipleValues.entrySet().stream().filter(it->(it.getValue()>=fixedMultipleThreshold)).sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).findFirst().get();
+					model.setFixedValue(entry, value.getKey());
+					addedFixedItems.add(entry);
+					
+				}catch(NoSuchElementException e){}
+			}
+				
+			
+			HashMap<Item, Integer> MultiplePositiveItemBindingsCounter = new HashMap<>();
+			
+			for(ItemBinding i: SinglePositiveItemBindings){
+				if(MultiplePositiveItemBindingsCounter.containsKey(i.getItemA())) MultiplePositiveItemBindingsCounter.replace(i.getItemA(), MultiplePositiveItemBindingsCounter.get(i.getItemA())+1);
+				else MultiplePositiveItemBindingsCounter.put(i.getItemA(), 1);
+				if(MultiplePositiveItemBindingsCounter.containsKey(i.getItemB())) MultiplePositiveItemBindingsCounter.replace(i.getItemB(), MultiplePositiveItemBindingsCounter.get(i.getItemB())+1);
+				else MultiplePositiveItemBindingsCounter.put(i.getItemB(), 1);
+				
+			}
+			
+			MultiplePositiveItemBindingsCounter.entrySet().stream().filter(it->it.getValue()>=positiveThreshold).forEach(it->addedActiveItems.add(it.getKey()));
+
+			
+			
+//			for(ItemBinding i: externalBindings){
+//				
+//				Item toAdd = (notSamples.contains(i.getItemA()))? i.getItemA() : i.getItemB();
+//				ArrayList<Double> fixedvalues=i.fixedBindingCheck(toAdd, fixedThreshold);
+//				
+//				if(!fixedvalues.isEmpty()) {
+//					
+//					model.setFixedValue(toAdd, fixedvalues.get(new Random().nextInt(fixedvalues.size())));
+//					addedFixedItems.add(toAdd);
+//				}
+//				else if(i.activeBindingCheck(extractThreshold, percThreshold)) addedActiveItems.add(toAdd);
+//			}
 			
 			
 			toDisable.addAll(mainProcess.getItems().stream().filter(it->(!mainProcess.getKernel().contains(it) && !addedActiveItems.contains(it) && !addedFixedItems.contains(it) 

@@ -35,7 +35,7 @@ public static <T> ArrayList<T> sampleWithoutReplacement(int sampleSize, Enumerat
 				map.remove(iter.next());
 			}
 			
-			distrib= new EnumeratedDistribution<T>(map);
+			if(result.size()<sampleSize) distrib= new EnumeratedDistribution<T>(map);
 			
 			
 			

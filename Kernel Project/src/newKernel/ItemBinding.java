@@ -44,11 +44,11 @@ public class ItemBinding {
 	}
 	
 	double getPositivePercentage(){
-		return timesPositive/timesExtracted;
+		return ((double)timesPositive)/ ((double)timesExtracted);
 	}
 	
 	double getNegativePercentage(){
-		return timesNegative/timesExtracted;
+		return ((double)timesNegative)/((double)timesExtracted);
 	}
 	
 	
@@ -71,14 +71,14 @@ public class ItemBinding {
 	
 	boolean activeBindingCheck(int extractThreshold, double percentage){
 
-		if(timesPositive>=extractThreshold&&getPositivePercentage()>=percentage) return true;
+		if(timesExtracted>=extractThreshold&&getPositivePercentage()>=percentage) return true;
 		return false;
 		
 	}
 	
 	boolean negativeBindingCheck(int extractThreshold, double percentage){
 
-		if(timesNegative>=extractThreshold&&getNegativePercentage()>=percentage) return true;
+		if(timesExtracted>=extractThreshold&&getNegativePercentage()>=percentage) return true;
 		return false;
 		
 	}

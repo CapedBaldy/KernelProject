@@ -15,6 +15,7 @@ public class Candidate {
 	private int addedBucketsCount;
 	private Bucket originalBucket;
 	private Solution sol;
+	private boolean completed;
 	
 	public Candidate(Bucket bucket, int position, int arrayLenght, Solution sol){
 		currentVersion=new ArrayList<Bucket>();
@@ -94,6 +95,16 @@ public class Candidate {
 		}
 		
 		return temp;
+	}
+
+
+	public boolean isCompleted() {
+		return completed;
+	}
+
+
+	public void setCompleted(boolean completed) {
+		this.completed = completed;
 	}
 	
 	

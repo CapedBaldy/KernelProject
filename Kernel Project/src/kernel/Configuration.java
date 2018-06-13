@@ -23,6 +23,10 @@ public class Configuration
 	private double percThreshold;
 	private int poolTabooCounter;
 	private int fixedMultipleThreshold;
+	private int candidateThreshold;
+	private int mainTabooCounter;
+	private int maxBucketsInCandidate;
+	private short poorBucketLimit;
 
 	public BucketBuilder getBucketBuilder()
 	{
@@ -226,6 +230,38 @@ public class Configuration
 
 	public void setFixedMultipleThreshold(int fixedMultipleThreshold) {
 		this.fixedMultipleThreshold = fixedMultipleThreshold;
+	}
+
+	public int getCandidateThreshold() {
+		return candidateThreshold;
+	}
+
+	public void setCandidateThreshold(int candidateThreshold) {
+		this.candidateThreshold = candidateThreshold;
+	}
+
+	public int getMainTabooCounter() {
+		return mainTabooCounter;
+	}
+
+	public void setMainTabooCounter(int mainTabooCounter) {
+		this.mainTabooCounter = mainTabooCounter;
+	}
+
+	public int getMaxBucketsInCandidate() {
+		return maxBucketsInCandidate;
+	}
+
+	public void setMaxBucketsInCandidate(int maxBucketsInCandidate) {
+		this.maxBucketsInCandidate = maxBucketsInCandidate;
+	}
+
+	public short getPoorBucketLimit() {
+		return poorBucketLimit;
+	}
+
+	public void setPoorBucketLimit(short poorBucketLimit) {
+		this.poorBucketLimit = poorBucketLimit;
 	}
 	
 	

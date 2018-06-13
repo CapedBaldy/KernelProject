@@ -41,6 +41,18 @@ public class ConfigurationReader
         		case "TIMELIMIT":
         			config.setTimeLimit(Integer.parseInt(splitLine[1]));
         			break;
+        		case "CANDIDATETHRESHOLD":
+        			config.setCandidateThreshold(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "MAXBUCKETSINCANDIDATE":
+        			config.setMaxBucketsInCandidate(Integer.parseInt(splitLine[1]));
+        			break;
+        		case "POORBUCKETLIMIT":
+        			config.setPoorBucketLimit(Short.parseShort(splitLine[1]));
+        			break;
+        		case "MAINTABOOCOUNTER":
+        			config.setMainTabooCounter(Integer.parseInt(splitLine[1]));
+        			break;
         		case "POOLTIMELIMIT":
         			config.setPoolTimeLimit(Integer.parseInt(splitLine[1]));
         			break;

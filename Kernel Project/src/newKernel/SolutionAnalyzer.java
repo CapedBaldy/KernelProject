@@ -21,11 +21,11 @@ public class SolutionAnalyzer {
 	private ArrayList<Item> disabledItems;
 	private ArrayList<Item> itemsWithBindings;
 	private double plObj;
-	private double kernelObj;
+	private double bestObj;
 	
 
 	public SolutionAnalyzer(Bindings bindings, Solution sol, double plObj, 
-			double kernelObj, EnumeratedDistribution<Item> distribution, ArrayList<Item> extractedItems, ArrayList<Item> itemsWithBindings){
+			double bestObj, EnumeratedDistribution<Item> distribution, ArrayList<Item> extractedItems, ArrayList<Item> itemsWithBindings){
 		
 		this.bindings=bindings;
 		this.sol=sol;
@@ -34,14 +34,14 @@ public class SolutionAnalyzer {
 		activeItems= new ArrayList<Item>(extractedItems.stream().filter(i->(sol.getVarValue(i.getName())>0)).collect(Collectors.toList()));
 		disabledItems= new ArrayList<Item>(extractedItems.stream().filter(i->(sol.getVarValue(i.getName())==0)).collect(Collectors.toList()));
 		this.plObj=plObj;
-		this.kernelObj=kernelObj;
+		this.bestObj=bestObj;
 		this.weightMap=distribution.getHashPmf();
 		this.itemsWithBindings=itemsWithBindings;
 	}
 	
 	void updateBindings(){
 		
-		if(sol.getObj()<=kernelObj){
+		if(sol.getObj()<=bestObj){
 			
 			
 			for(int i=0;i<bucketItems.size();i++ ){
@@ -105,10 +105,10 @@ public class SolutionAnalyzer {
 	
 	HashMap<Item,Double> updateWeights(){
 		
-		double diff100=plObj-kernelObj;
+		double diff100=bestObj-plObj;
 		double solObj=sol.getObj();
-		double diffX=solObj-kernelObj;
-		if(diff100>0){
+		double diffX=bestObj-solObj;
+		if(diffX>0){
 			double perc=diffX/diff100*100;
 			
 			for(Item a: activeItems){
@@ -122,7 +122,7 @@ public class SolutionAnalyzer {
 		}
 		
 		
-		if(diff100<=0){
+		if(diffX<=0){
 			double perc=-diffX/diff100*100;
 			
 			for(Item a: activeItems){

@@ -1,4 +1,7 @@
 package kernel;
+
+import newKernel.NewKernelSearch;
+
 public class Start
 {
 	public static void main(String[] args)
@@ -7,7 +10,7 @@ public class Start
 		String pathlog = args[1];
 		String pathConfig = args[2];
 		Configuration config = ConfigurationReader.read(pathConfig);		
-		KernelSearch ks = new KernelSearch(pathmps, pathlog, config);
+		NewKernelSearch ks = new NewKernelSearch(pathmps, pathlog, config);
 		ks.start();
 	}
 }

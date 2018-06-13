@@ -30,12 +30,12 @@ public class PoolAnalyzer {
 	
 	private Bindings bindings;
 	private ArrayList<Candidate> candidates;
-	private KernelSearch mainProcess;
-	private Solution bestSolution;  //best solution relative to the pool, not the main process
+	private NewKernelSearch mainProcess;
+	private Solution bestPoolSolution;  //best solution relative to the pool, not the main process
 	private ArrayList<Item> poolItems;
 	private ArrayList<Item> itemsWithBindings;
 	private Solution LPSol;
-	private EnumeratedDistribution<Item> distribution;
+	private EnumeratedDistribution<Item> poolDistribution;
 	private Instant startTime;
 	private int timeLimit;
 	private int wastedIterations; //iterazioni con soluzione minore di bestSolution
@@ -52,7 +52,7 @@ public class PoolAnalyzer {
 	
 
 	
-	public PoolAnalyzer(KernelSearch process){
+	public PoolAnalyzer(NewKernelSearch process){
 		
 		this.mainProcess=process;
 		bindings= new Bindings();
@@ -66,7 +66,7 @@ public class PoolAnalyzer {
 		fixedThreshold=mainProcess.getConfig().getFixedThreshold();
 		poolTabooCounter=mainProcess.getConfig().getPoolTabooCounter();
 		itemsWithBindings= new ArrayList<Item>();
-		bestSolution= new Solution();
+		bestPoolSolution= new Solution();
 		negativeThreshold=mainProcess.getConfig().getNegativeThreshold();
 		positiveThreshold=mainProcess.getConfig().getPositiveThreshold();
 		fixedMultipleThreshold=mainProcess.getConfig().getFixedMultipleThreshold();
@@ -88,13 +88,12 @@ public class PoolAnalyzer {
 		
 		while(wastedIterations<=wastedIterLimit && !checkStop()){
 			
-			HashMap<Item,Double> weightMap = distribution.getHashPmf();
 
 			Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), Math.min(mainProcess.getTlim(), mainProcess.getRemainingTime()), mainProcess.getConfig(),false);
 			model.buildModel();
 			model.setCallback(mainProcess.getCallback());
 			
-			ArrayList<Item> samples= SamplingTools.sampleWithTaboo(sampleSize, distribution);
+			ArrayList<Item> samples= SamplingTools.sampleWithTaboo(sampleSize, poolDistribution);
 			ArrayList<Item> notSamples= new ArrayList<>(poolItems.stream().filter(it->!samples.contains(it)).collect(Collectors.toList()));
 			ArrayList<Item> toDisable = new ArrayList<Item>();
 			ArrayList<Item> addedActiveItems= new ArrayList<Item>();
@@ -129,7 +128,7 @@ public class PoolAnalyzer {
 //			
 			ArrayList<ItemBinding> externalBindings = bindings.searchExternalBinding(samples, notSamples, itemsWithBindings);
 			HashMap<Item, ArrayList<ArrayList<Double>>> valuesArraysForItems = new HashMap<>();
-			ArrayList<ItemBinding> SinglePositiveItemBindings= new ArrayList<>();
+			HashMap<Item, Integer> MultiplePositiveItemBindingsCounter = new HashMap<>();
 			
 			for (ItemBinding i: externalBindings){
 				
@@ -145,9 +144,14 @@ public class PoolAnalyzer {
 					}
 				}
 				
-				else if(i.activeBindingCheck(extractThreshold, percThreshold)) SinglePositiveItemBindings.add(i);
+				else if(i.activeBindingCheck(extractThreshold, percThreshold)) {
+						if(MultiplePositiveItemBindingsCounter.containsKey(toAdd)) MultiplePositiveItemBindingsCounter.replace(toAdd, MultiplePositiveItemBindingsCounter.get(toAdd)+1);
+						else MultiplePositiveItemBindingsCounter.put(toAdd, 1);
+				}
 				
 			}
+			
+			MultiplePositiveItemBindingsCounter.entrySet().stream().filter(it->it.getValue()>=positiveThreshold).forEach(it->addedActiveItems.add(it.getKey()));
 			
 			Iterator<Item> iter =valuesArraysForItems.keySet().iterator();	
 			
@@ -171,18 +175,8 @@ public class PoolAnalyzer {
 				}catch(NoSuchElementException e){}
 			}
 				
+	
 			
-			HashMap<Item, Integer> MultiplePositiveItemBindingsCounter = new HashMap<>();
-			
-			for(ItemBinding i: SinglePositiveItemBindings){
-				if(MultiplePositiveItemBindingsCounter.containsKey(i.getItemA())) MultiplePositiveItemBindingsCounter.replace(i.getItemA(), MultiplePositiveItemBindingsCounter.get(i.getItemA())+1);
-				else MultiplePositiveItemBindingsCounter.put(i.getItemA(), 1);
-				if(MultiplePositiveItemBindingsCounter.containsKey(i.getItemB())) MultiplePositiveItemBindingsCounter.replace(i.getItemB(), MultiplePositiveItemBindingsCounter.get(i.getItemB())+1);
-				else MultiplePositiveItemBindingsCounter.put(i.getItemB(), 1);
-				
-			}
-			
-			MultiplePositiveItemBindingsCounter.entrySet().stream().filter(it->it.getValue()>=positiveThreshold).forEach(it->addedActiveItems.add(it.getKey()));
 
 			
 			
@@ -203,10 +197,11 @@ public class PoolAnalyzer {
 			toDisable.addAll(mainProcess.getItems().stream().filter(it->(!mainProcess.getKernel().contains(it) && !addedActiveItems.contains(it) && !addedFixedItems.contains(it) 
 					&& !samples.contains(it))).collect(Collectors.toList()));
 			//gli item contenuti in samples che devono essere esclusi sono già in toDisable
-			
+			if(!bestPoolSolution.isEmpty()) model.readSolution(bestPoolSolution);
+
 			model.disableItems(toDisable);
 			
-			if(!bestSolution.isEmpty()) model.readSolution(bestSolution);
+			if(!bestPoolSolution.isEmpty()) model.readSolution(bestPoolSolution);
 			model.solve();
 			
 			if(model.hasSolution()){
@@ -214,16 +209,19 @@ public class PoolAnalyzer {
 				ArrayList<Item> notFixedActiveItems = new ArrayList<Item>(mainProcess.getItems().stream().
 						filter(it->(!toDisable.contains(it)&&!addedFixedItems.contains(it))).collect(Collectors.toList()));
 				
-				if(bestSolution.isEmpty() || model.getSolution().getObj()>bestSolution.getObj()) bestSolution=model.getSolution();
+				if(bestPoolSolution.isEmpty() || model.getSolution().getObj()<bestPoolSolution.getObj()) {
+					bestPoolSolution=model.getSolution();
+					if(model.getSolution().getObj()<mainProcess.getBestSolution().getObj()) model.exportSolution();
+				}
 				SolutionAnalyzer analyzer = new SolutionAnalyzer(bindings, model.getSolution(), LPSol.getObj(), mainProcess.getBestSolution().getObj(), 
-						distribution, notFixedActiveItems, itemsWithBindings);
+						poolDistribution, notFixedActiveItems, itemsWithBindings);
 				
 				analyzer.updateBindings();
 				HashMap<Item,Double> newWeightMap = analyzer.updateWeights();
 				
 				notFixedActiveItems.stream().forEach(it->it.setTabooCount((short) poolTabooCounter));
 				
-				distribution= new EnumeratedDistribution<>(newWeightMap);
+				poolDistribution= new EnumeratedDistribution<>(newWeightMap);
 				wastedIterations=0;
 				
 				
@@ -237,7 +235,7 @@ public class PoolAnalyzer {
 		}
 		
 		
-		
+		poolItems.stream().forEach(it->it.setTabooCount((short)0));
 		
 		
 	}
@@ -250,10 +248,10 @@ public class PoolAnalyzer {
 		HashSet<Item> tempActiveItemsInCandidates = new HashSet<>(); //uso hashset per evitare duplicati
 		
 		for(Candidate a: candidates){   //costruisco i bindings iniziali tenendo conto delle soluzioni dei candidati, senza assegnare pesi statici
-			SolutionAnalyzer analyzer= new SolutionAnalyzer(bindings, a.getSol(), 0, mainProcess.getBestSolution().getObj(), null, a.mergeBuckets(), itemsWithBindings); //costruisco con LPSOl=0 e distribuzione =null, non devo aggiornare pesi
-			analyzer.updateBindings();//assumo che best solution=soluzione coinvolgente solo kernel
+			//SolutionAnalyzer analyzer= new SolutionAnalyzer(bindings, a.getSol(), 0, mainProcess.getBestKernelSolution().getObj(), null, a.mergeBuckets(), itemsWithBindings); //costruisco con LPSOl=0 e distribuzione =null, non devo aggiornare pesi
+			//analyzer.updateBindings();//assumo che best solution=soluzione coinvolgente solo kernel
 			a.mergeBuckets().stream().forEach(it->tempPoolItems.add(it));  //aggiungo i bucket all'hashset, evitando duplicati
-			analyzer.getActiveItems().stream().forEach(it->tempActiveItemsInCandidates.add(it));
+			a.mergeBuckets().stream().filter(i->(a.getSol().getVarValue(i.getName())>0)).collect(Collectors.toList()).stream().forEach(it->tempActiveItemsInCandidates.add(it));
 		}
 		
 		poolItems= new ArrayList<Item>(tempPoolItems);
@@ -274,6 +272,7 @@ public class PoolAnalyzer {
 		}
 		
 		LPSol=model.getSolution();
+		if(LPSol.getObj()>=mainProcess.getBestSolution().getObj()) return false;
 		
 		ArrayList<Item> activeItemsInLPSol = new ArrayList<Item>(model.getSelectedItems(poolItems)); //confronta con i valori della soluzione del mdoello, non di Item.Xr
 		ArrayList<Item> mergedActiveItems= new ArrayList<Item>(activeItemsInLPSol.stream().filter(it->activeItemsInCandidates.contains(it)).collect(Collectors.toList())); //escludo automaticamente gli item contenuti nel kernel
@@ -290,7 +289,7 @@ public class PoolAnalyzer {
 		
 		
 		
-		distribution= new EnumeratedDistribution<Item>(mapForDistribution);
+		poolDistribution= new EnumeratedDistribution<Item>(mapForDistribution);
 		
 		return true;
 		
@@ -303,6 +302,17 @@ public class PoolAnalyzer {
 		return (int) (timeLimit - Duration.between(startTime, Instant.now()).getSeconds())>0;
 	}
 	
+	ArrayList<Item> getItemForKernel(){
+		if(!bestPoolSolution.isEmpty()) return new ArrayList<Item>(poolItems.stream().filter(i->(bestPoolSolution.getVarValue(i.getName())>0)).collect(Collectors.toList()));
+		else return null;
+	}
+
+
+	public Solution getBestPoolSolution() {
+		return bestPoolSolution;
+	}
+
+
 	
 
 }

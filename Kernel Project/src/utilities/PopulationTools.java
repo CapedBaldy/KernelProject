@@ -23,7 +23,7 @@ public class PopulationTools<T>{
 	public PopulationTools(List<T> items_) {
 		
 		items=items_;
-		total=items.size()/100;
+		total=((double)items.size()-1)/100;
 		indexes= new HashMap<T,Double>();
 		for(T a: items){
 			
@@ -46,7 +46,7 @@ public class PopulationTools<T>{
 	
 	private Double linearFunction(double x){
 		
-		return -10/100*x+50; 
+		return ((double)-10)/((double)100)*x+50; 
 		//funzione lineare customizzata
 	}
 
@@ -66,13 +66,13 @@ public class PopulationTools<T>{
 	
 	public HashMap<T,Double> getGaussian(double u, HashMap<T,Double> map){
 		
-		double uCorrect=u/total;  //normalizza la media
+		//double uCorrect=u/total;  //normalizza la media
 		Iterator<Entry<T, Double>> iter = map.entrySet().iterator();
 		HashMap<T,Double> result= new HashMap<T,Double>();
 		
 		while(iter.hasNext()){
 			Entry<T,Double> entry=(Entry<T,Double>) iter.next();
-			double value=gaussianFunction(uCorrect, entry.getValue());
+			double value=gaussianFunction(entry.getValue(), u );
 			result.put(entry.getKey(), value);
 		}
 		return result;

@@ -37,28 +37,29 @@ public class PoolAnalyzer {
 	private Solution LPSol;
 	private EnumeratedDistribution<Item> poolDistribution;
 	private Instant startTime;
-	private int timeLimit;
+	private int poolTimeLimit;
 	private int wastedIterations; //iterazioni con soluzione minore di bestSolution
 	private int wastedIterLimit;
-	private double extractionPerc;
-	private int extractThreshold;
-	private int fixedThreshold;
-	private double percThreshold;
-	private int poolTabooCounter;
-	private int negativeThreshold;
-	private int positiveThreshold;
-	private int fixedMultipleThreshold;
+	private double extractionPerc; //percentuale di item estrarre dalla pool ad ogni iterazione
+	private int extractThreshold; //numero di estrazioni oltre la quale si ritiene valido un bound
+	private int fixedThreshold;  //numero di volte oltre la quale si ritiene valido un bound di tipo valore fissato
+	private double percThreshold; //percentuale oltre la quale si ritiene un bound buono o cattivo
+	private int poolTabooCounter; 
+	private int negativeThreshold;  //numero di bound oltre il quale si espelle un item
+	private int positiveThreshold;  //numero di bound oltre il quale si immette un item
+	private int fixedMultipleThreshold; //numero di bound-valore-fissato oltre il quale si fissa un item ad un valore
 	
 	
 
 	
-	public PoolAnalyzer(NewKernelSearch process){
+	public PoolAnalyzer(NewKernelSearch process, ArrayList<Candidate> candidates){
 		
 		this.mainProcess=process;
+		this.candidates=candidates;
 		bindings= new Bindings();
 		startTime=Instant.now();
 		wastedIterations=0;
-		timeLimit=mainProcess.getConfig().getPoolTimeLimit();
+		poolTimeLimit=mainProcess.getConfig().getPoolTimeLimit();
 		wastedIterLimit=mainProcess.getConfig().getWastedIterLimit();
 		extractionPerc=mainProcess.getConfig().getExtractionPerc();
 		extractThreshold=mainProcess.getConfig().getExtractThreshold();
@@ -86,10 +87,10 @@ public class PoolAnalyzer {
 		
 		
 		
-		while(wastedIterations<=wastedIterLimit && !checkStop()){
+		while(wastedIterations<=wastedIterLimit && checkStop()){
 			
 
-			Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), Math.min(mainProcess.getTlim(), mainProcess.getRemainingTime()), mainProcess.getConfig(),false);
+			Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), getRemainingTime(), mainProcess.getConfig(),false);
 			model.buildModel();
 			model.setCallback(mainProcess.getCallback());
 			
@@ -126,7 +127,7 @@ public class PoolAnalyzer {
 //				}
 //			}
 //			
-			ArrayList<ItemBinding> externalBindings = bindings.searchExternalBinding(samples, notSamples, itemsWithBindings);
+			ArrayList<ItemBinding> externalBindings = bindings.searchExternalBinding(samples, notSamples);
 			HashMap<Item, ArrayList<ArrayList<Double>>> valuesArraysForItems = new HashMap<>();
 			HashMap<Item, Integer> MultiplePositiveItemBindingsCounter = new HashMap<>();
 			
@@ -144,7 +145,7 @@ public class PoolAnalyzer {
 					}
 				}
 				
-				else if(i.activeBindingCheck(extractThreshold, percThreshold)) {
+				if(i.activeBindingCheck(extractThreshold, percThreshold)) {
 						if(MultiplePositiveItemBindingsCounter.containsKey(toAdd)) MultiplePositiveItemBindingsCounter.replace(toAdd, MultiplePositiveItemBindingsCounter.get(toAdd)+1);
 						else MultiplePositiveItemBindingsCounter.put(toAdd, 1);
 				}
@@ -200,13 +201,12 @@ public class PoolAnalyzer {
 			if(!bestPoolSolution.isEmpty()) model.readSolution(bestPoolSolution);
 
 			model.disableItems(toDisable);
-			
-			if(!bestPoolSolution.isEmpty()) model.readSolution(bestPoolSolution);
+
 			model.solve();
 			
 			if(model.hasSolution()){
 				
-				ArrayList<Item> notFixedActiveItems = new ArrayList<Item>(mainProcess.getItems().stream().
+				ArrayList<Item> notFixedActiveItems = new ArrayList<Item>(mainProcess.getItems().stream(). //item attivi e non fissati
 						filter(it->(!toDisable.contains(it)&&!addedFixedItems.contains(it))).collect(Collectors.toList()));
 				
 				if(bestPoolSolution.isEmpty() || model.getSolution().getObj()<bestPoolSolution.getObj()) {
@@ -222,7 +222,9 @@ public class PoolAnalyzer {
 				notFixedActiveItems.stream().forEach(it->it.setTabooCount((short) poolTabooCounter));
 				
 				poolDistribution= new EnumeratedDistribution<>(newWeightMap);
-				wastedIterations=0;
+				
+				if(model.getSolution().getObj()<mainProcess.getBestSolution().getObj()) wastedIterations=0;
+				else wastedIterations++;
 				
 				
 				
@@ -249,15 +251,16 @@ public class PoolAnalyzer {
 		
 		for(Candidate a: candidates){   //costruisco i bindings iniziali tenendo conto delle soluzioni dei candidati, senza assegnare pesi statici
 			//SolutionAnalyzer analyzer= new SolutionAnalyzer(bindings, a.getSol(), 0, mainProcess.getBestKernelSolution().getObj(), null, a.mergeBuckets(), itemsWithBindings); //costruisco con LPSOl=0 e distribuzione =null, non devo aggiornare pesi
-			//analyzer.updateBindings();//assumo che best solution=soluzione coinvolgente solo kernel
+			//analyzer.updateBindings();//
 			a.mergeBuckets().stream().forEach(it->tempPoolItems.add(it));  //aggiungo i bucket all'hashset, evitando duplicati
 			a.mergeBuckets().stream().filter(i->(a.getSol().getVarValue(i.getName())>0)).collect(Collectors.toList()).stream().forEach(it->tempActiveItemsInCandidates.add(it));
+			//E se un item è attivo in un candidato e non un un altro?
 		}
 		
 		poolItems= new ArrayList<Item>(tempPoolItems);
 		ArrayList<Item> activeItemsInCandidates = new ArrayList<Item>(tempActiveItemsInCandidates);
 		
-		Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), Math.min(mainProcess.getTlim(), mainProcess.getRemainingTime()), mainProcess.getConfig(),false); // time limit equal to the global time limit
+		Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), getRemainingTime(), mainProcess.getConfig(),false); 
 		model.buildModel();
 		List<Item> toDisable= mainProcess.getItems().stream().filter(it->!mainProcess.getKernel().contains(it)&&!poolItems.contains(it)).collect(Collectors.toList());
 		model.disableItems(toDisable);
@@ -299,7 +302,11 @@ public class PoolAnalyzer {
 	
 	boolean checkStop(){
 		
-		return (int) (timeLimit - Duration.between(startTime, Instant.now()).getSeconds())>0;
+		return (poolTimeLimit - Duration.between(startTime, Instant.now()).getSeconds())>0;
+	}
+	
+	int getRemainingTime(){
+		return (int) (poolTimeLimit - Duration.between(startTime, Instant.now()).getSeconds());
 	}
 	
 	ArrayList<Item> getItemForKernel(){

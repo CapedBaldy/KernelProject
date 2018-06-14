@@ -251,8 +251,9 @@ public class Model
 			for(Item it : list)
 			{
 				model.getVarByName(it.getName()).set(GRB.CharAttr.VType, GRB.CONTINUOUS);
-				model.update();
+				
 			}
+			model.update();
 		}catch(Exception ex)
 		{
 			ex.printStackTrace();

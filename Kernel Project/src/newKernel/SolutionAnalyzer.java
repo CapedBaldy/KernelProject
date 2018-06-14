@@ -16,7 +16,7 @@ public class SolutionAnalyzer {
 	private Solution sol;
 	private EnumeratedDistribution<Item> distribution;
 	private HashMap<Item,Double> weightMap;
-	private ArrayList<Item> bucketItems;
+	private ArrayList<Item> extractedItems;
 	private ArrayList<Item> activeItems;
 	private ArrayList<Item> disabledItems;
 	private ArrayList<Item> itemsWithBindings;
@@ -30,7 +30,7 @@ public class SolutionAnalyzer {
 		this.bindings=bindings;
 		this.sol=sol;
 		this.distribution=distribution;
-		this.bucketItems=extractedItems;
+		this.extractedItems=extractedItems;
 		activeItems= new ArrayList<Item>(extractedItems.stream().filter(i->(sol.getVarValue(i.getName())>0)).collect(Collectors.toList()));
 		disabledItems= new ArrayList<Item>(extractedItems.stream().filter(i->(sol.getVarValue(i.getName())==0)).collect(Collectors.toList()));
 		this.plObj=plObj;
@@ -41,13 +41,13 @@ public class SolutionAnalyzer {
 	
 	void updateBindings(){
 		
-		if(sol.getObj()<=bestObj){
+		if(sol.getObj()>=bestObj){
 			
 			
-			for(int i=0;i<bucketItems.size();i++ ){
-				Item itemA=bucketItems.get(i);
-				for(int j=bucketItems.indexOf(itemA)+1;j<bucketItems.size();j++){
-					Item itemB=bucketItems.get(j);
+			for(int i=0;i<extractedItems.size();i++ ){
+				Item itemA=extractedItems.get(i);
+				for(int j=i+1;j<extractedItems.size();j++){
+					Item itemB=extractedItems.get(j);
 					
 
 					
@@ -67,7 +67,7 @@ public class SolutionAnalyzer {
 		
 			for(int i=0;i<activeItems.size();i++ ){
 				Item itemA=activeItems.get(i);
-				for(int j=activeItems.indexOf(itemA)+1;j<activeItems.size();j++){
+				for(int j=i+1;j<activeItems.size();j++){
 					Item itemB=activeItems.get(j);
 					
 	
@@ -87,17 +87,17 @@ public class SolutionAnalyzer {
 					}
 				}
 			
-			for(int i=0;i<disabledItems.size();i++ ){
-				Item itemA=disabledItems.get(i);
-				for(int j=disabledItems.indexOf(itemA)+1;j<disabledItems.size();j++){
-					Item itemB=disabledItems.get(j);
-		
-					ItemBinding bind= bindings.searchBinding(itemA,itemB); //se non esiste non occorre aumentare il numero
-					if(bind!=null)
-					bind.incrementExtractedCount();
-					
-					}
-				}
+//			for(int i=0;i<disabledItems.size();i++ ){
+//				Item itemA=disabledItems.get(i);
+//				for(int j=i+1;j<disabledItems.size();j++){
+//					Item itemB=disabledItems.get(j);
+//		
+//					ItemBinding bind= bindings.searchBinding(itemA,itemB); //se non esiste non occorre aumentare il numero
+//					if(bind!=null)
+//					bind.incrementExtractedCount();
+//					
+//					}
+//				}
 		
 		}
 	}

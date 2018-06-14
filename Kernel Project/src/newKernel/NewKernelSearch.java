@@ -209,7 +209,11 @@ public class NewKernelSearch
 							}
 							else {
 								c.setSol(model.getSolution());
-								if(model.getSolution().getObj()< bestSolution.getObj()) model.exportSolution();
+								
+								if(model.getSolution().getObj()<bestSolution.getObj()||bestSolution.isEmpty()) {
+									bestSolution=model.getSolution();
+									model.exportSolution();
+								}
 							}
 						}
 						
@@ -227,7 +231,7 @@ public class NewKernelSearch
 			});
 			
 			
-			PoolAnalyzer poolAnalyzer = new PoolAnalyzer(this);
+			PoolAnalyzer poolAnalyzer = new PoolAnalyzer(this, candidatesList);
 			if(poolAnalyzer.initialize()){
 				poolAnalyzer.analyzePool();
 				if(poolAnalyzer.getItemForKernel()!=null) poolAnalyzer.getItemForKernel().stream().forEach(it->{
@@ -240,7 +244,7 @@ public class NewKernelSearch
 				});
 				
 				if(!poolAnalyzer.getBestPoolSolution().isEmpty()&&(poolAnalyzer.getBestPoolSolution().getObj()<bestSolution.getObj() || bestSolution.isEmpty())) bestSolution=poolAnalyzer.getBestPoolSolution();
-				
+				//già esportata in poolanalyzer
 				
 				Model model = new Model(instPath, logPath, Math.min(tlimKernel, getRemainingTime()), config, false);	
 				model.buildModel();
@@ -251,15 +255,16 @@ public class NewKernelSearch
 				model.disableItems(toDisable);
 				model.setCallback(callback);
 				model.solve();
-				if(model.hasSolution() && (model.getSolution().getObj() < bestKernelSolution.getObj() || bestSolution.isEmpty()))
+				if(model.hasSolution() && (model.getSolution().getObj() < bestKernelSolution.getObj() || bestKernelSolution.isEmpty()))
 				{
 					bestKernelSolution = model.getSolution();
 					
-					if(model.getSolution().getObj() < bestSolution.getObj())  {
-						bestSolution=model.getSolution();
-						model.exportSolution();
-					}
-					
+				}
+				
+				
+				if(model.getSolution().getObj() < bestSolution.getObj())  {
+					bestSolution=model.getSolution();
+					model.exportSolution();
 				}
 			}
 			}

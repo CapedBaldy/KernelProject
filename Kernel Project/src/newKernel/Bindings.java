@@ -47,7 +47,7 @@ public class Bindings {
 		
 		for(int i=0;i<samplesWithBindings.size();i++ ){
 			Item itemA=samplesWithBindings.get(i);
-			for(int j=samplesWithBindings.indexOf(itemA)+1;j<samplesWithBindings.size();j++){
+			for(int j=i+1;j<samplesWithBindings.size();j++){      //
 				Item itemB=samplesWithBindings.get(j);
 				
 				ItemBinding bind= searchBinding(itemA,itemB);
@@ -67,7 +67,7 @@ public class Bindings {
 		
 	}
 
-	ArrayList<ItemBinding> searchExternalBinding(ArrayList<Item> samples, ArrayList<Item> notSamples, ArrayList<Item> itemsWithBindings){
+	ArrayList<ItemBinding> searchExternalBinding(ArrayList<Item> samples, ArrayList<Item> notSamples){
 		
 		ArrayList<ItemBinding> result = new ArrayList<ItemBinding>();
 		

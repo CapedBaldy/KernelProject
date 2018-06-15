@@ -119,6 +119,9 @@ public class ConfigurationReader
         		case "TIMELIMITBUCKET":
         			config.setTimeLimitBucket(Integer.parseInt(splitLine[1]));
         			break;
+        		case "OUTPUTFLAG":
+        			config.setOutputFlag(Integer.parseInt(splitLine[1]));
+        			break;
         		case "KERNELBUILDER":
         			switch(Integer.parseInt(splitLine[1]))
         			{

@@ -27,6 +27,7 @@ public class Configuration
 	private int mainTabooCounter;
 	private int maxBucketsInCandidate;
 	private short poorBucketLimit;
+	private int outputFlag;
 
 	public BucketBuilder getBucketBuilder()
 	{
@@ -262,6 +263,14 @@ public class Configuration
 
 	public void setPoorBucketLimit(short poorBucketLimit) {
 		this.poorBucketLimit = poorBucketLimit;
+	}
+
+	public int getOutputFlag() {
+		return outputFlag;
+	}
+
+	public void setOutputFlag(int outputFlag) {
+		this.outputFlag = outputFlag;
 	}
 	
 	

@@ -56,6 +56,7 @@ public class Model
 		env.set(GRB.IntParam.Threads, config.getNumThreads());
 		env.set(GRB.IntParam.Presolve, config.getPresolve());
 		env.set(GRB.DoubleParam.MIPGap, config.getMipGap());
+		if(config.getOutputFlag()==0) env.set(GRB.IntParam.OutputFlag, 0);							
 		if (timeLimit > 0)
 			env.set(GRB.DoubleParam.TimeLimit, timeLimit);
 	}
@@ -115,7 +116,7 @@ public class Model
 			}
 		} catch (GRBException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return -1;
 	}

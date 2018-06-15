@@ -3,7 +3,6 @@ import kernel.Item;
 import kernel.Solution;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -14,7 +13,6 @@ public class SolutionAnalyzer {
 	
 	private Bindings bindings;
 	private Solution sol;
-	private EnumeratedDistribution<Item> distribution;
 	private HashMap<Item,Double> weightMap;
 	private ArrayList<Item> extractedItems;
 	private ArrayList<Item> activeItems;
@@ -29,7 +27,6 @@ public class SolutionAnalyzer {
 		
 		this.bindings=bindings;
 		this.sol=sol;
-		this.distribution=distribution;
 		this.extractedItems=extractedItems;
 		activeItems= new ArrayList<Item>(extractedItems.stream().filter(i->(sol.getVarValue(i.getName())>0)).collect(Collectors.toList()));
 		disabledItems= new ArrayList<Item>(extractedItems.stream().filter(i->(sol.getVarValue(i.getName())==0)).collect(Collectors.toList()));
@@ -126,6 +123,7 @@ public class SolutionAnalyzer {
 			double perc=-diffX/diff100*100;
 			
 			for(Item a: activeItems){
+				
 				weightMap.replace(a, weightMap.get(a)-perc);	
 			}
 			

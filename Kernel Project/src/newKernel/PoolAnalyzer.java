@@ -9,15 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.distribution.EnumeratedDistribution;
 
 
-import gurobi.GRB;
+
 import kernel.Item;
-import kernel.KernelSearch;
+
 import kernel.Model;
 import kernel.Solution;
 import utilities.PopulationTools;
@@ -201,13 +200,13 @@ public class PoolAnalyzer {
 			if(!bestPoolSolution.isEmpty()) model.readSolution(bestPoolSolution);
 
 			model.disableItems(toDisable);
-
+			System.out.print("Solving extracted items in pool: ");
 			model.solve();
 			
 			if(model.hasSolution()){
-				
+				System.out.println("Found solution");
 				ArrayList<Item> notFixedActiveItems = new ArrayList<Item>(mainProcess.getItems().stream(). //item attivi e non fissati
-						filter(it->(!toDisable.contains(it)&&!addedFixedItems.contains(it))).collect(Collectors.toList()));
+						filter(it->(!toDisable.contains(it)&&!addedFixedItems.contains(it)&&!mainProcess.getKernel().contains(it))).collect(Collectors.toList()));
 				
 				if(bestPoolSolution.isEmpty() || model.getSolution().getObj()<bestPoolSolution.getObj()) {
 					bestPoolSolution=model.getSolution();
@@ -217,6 +216,7 @@ public class PoolAnalyzer {
 						poolDistribution, notFixedActiveItems, itemsWithBindings);
 				
 				analyzer.updateBindings();
+				
 				HashMap<Item,Double> newWeightMap = analyzer.updateWeights();
 				
 				notFixedActiveItems.stream().forEach(it->it.setTabooCount((short) poolTabooCounter));
@@ -228,7 +228,10 @@ public class PoolAnalyzer {
 				
 				
 				
-			}else wastedIterations++;
+			}else {
+				System.out.println("No solution");
+				wastedIterations++;
+			}
 			
 			
 			
@@ -266,14 +269,17 @@ public class PoolAnalyzer {
 		model.disableItems(toDisable);
 		model.setContinuous(poolItems);
 		//model.setCallback(mainProcess.getCallback()); non metto callback, la soluzione è in parte rilassata
+		System.out.print("Solving partial LP relaxation :");
 		model.solve();
 		
 		if(!model.hasSolution()){
 			
-			
+			System.out.println("No solution");
 			return false;
 		}
 		
+		
+		System.out.println("Found solution");
 		LPSol=model.getSolution();
 		if(LPSol.getObj()>=mainProcess.getBestSolution().getObj()) return false;
 		
@@ -289,8 +295,6 @@ public class PoolAnalyzer {
 		
 		PopulationTools<Item> tools = new PopulationTools<Item>(notMergedActiveItems);
 		mapForDistribution.putAll(tools.getLinear()); //inserisco nella map gli item pesati secondo funzione
-		
-		
 		
 		poolDistribution= new EnumeratedDistribution<Item>(mapForDistribution);
 		

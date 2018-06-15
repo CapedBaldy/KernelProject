@@ -133,6 +133,9 @@ public class NewKernelSearch
 			
 			//riempimento della pool
 			while(candidatesList.size()<candidateThreshold||candidatesList.stream().anyMatch(it->!it.isCompleted())){
+				System.out.println("average: "+average);
+				System.out.println("bucket inseriti: "+candidatesList.size());
+				System.out.println("bucket fuori: "+buckets.size());
 					
 				if(changedAverageFlag){
 					mainDistribution= new PopulationTools<Bucket>(buckets).getGaussianDistribution(average);
@@ -140,6 +143,10 @@ public class NewKernelSearch
 							
 				}
 				ArrayList<Bucket> tempBucketList= SamplingTools.sampleWithTaboo(candidateThreshold-candidatesList.size(), mainDistribution);
+				if(tempBucketList==null){
+					System.out.println("Bucket insufficienti: troppi bucket non hanno superato il test per l'inserzione");
+					return;
+				}
 //				if(samples!=null)  tempBucketList=samples;
 //				else {
 //					average=average+10;
@@ -149,7 +156,7 @@ public class NewKernelSearch
 //				}
 				
 				for(Bucket b: tempBucketList){
-					
+					System.out.println(buckets.indexOf(b));
 					if(poorBucketCount>=poorBucketLimit){
 						average+=10;
 						if(average==110.0) average=0;
@@ -163,6 +170,7 @@ public class NewKernelSearch
 					model.buildModel();		
 					model.disableItems(toDisable);
 					model.setCallback(callback);
+					System.out.println("Solving extracted bucket: ");
 					model.solve();
 					
 					if(model.hasSolution()){
@@ -170,16 +178,19 @@ public class NewKernelSearch
 							
 							candidatesList.add(new Candidate(b, buckets.indexOf(b), buckets.size(), model.getSolution()));
 							b.setTaboo(true);
+							System.out.println("Found solution");
 						}
-						else {
-							b.setTaboo(true);
-							poorBucketCount++;
-						}
+						
 						
 						if(model.getSolution().getObj()<bestSolution.getObj()||bestSolution.isEmpty()) {
 							bestSolution=model.getSolution();
 							model.exportSolution();
 						}
+						
+					}else if(!model.hasSolution()||model.getSolution().getObj()>=bestKernelSolution.getObj()){
+						b.setTaboo(true);
+						poorBucketCount++;
+						System.out.println("No solution");
 					}
 	
 				}
@@ -202,18 +213,18 @@ public class NewKernelSearch
 						model.setCallback(callback);
 						model.solve();
 						
-						if(model.hasSolution()){
-							if(model.getSolution().getObj()>=c.getSol().getObj()) {
-								c.undoAddBucket();
-								c.setCompleted(true);
-							}
-							else {
-								c.setSol(model.getSolution());
+						if(!model.hasSolution()||model.getSolution().getObj()>=c.getSol().getObj()) {
+							c.undoAddBucket();
+							c.setCompleted(true);
+						}
+						else if(model.hasSolution()&&model.getSolution().getObj()<c.getSol().getObj()){
+
+							c.setSol(model.getSolution());
 								
-								if(model.getSolution().getObj()<bestSolution.getObj()||bestSolution.isEmpty()) {
-									bestSolution=model.getSolution();
-									model.exportSolution();
-								}
+							if(model.getSolution().getObj()<bestSolution.getObj()||bestSolution.isEmpty()) {
+								bestSolution=model.getSolution();
+								model.exportSolution();
+								
 							}
 						}
 						

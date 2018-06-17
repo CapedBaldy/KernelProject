@@ -119,7 +119,19 @@ public class PopulationTools<T>{
 	}
 
 	
+	public HashMap<T,Double> getEqualProb(){
+		HashMap<T,Double> result= new HashMap<>(indexes);
+		Iterator<T> iter =result.keySet().iterator();
+		while(iter.hasNext()){
+			T key = iter.next();
+			result.replace(key, 50.0);
+		}
+		return result;
+	}
 	
+	public EnumeratedDistribution<T> getEqualProbDistribution(){
+		return new EnumeratedDistribution<T>(getEqualProb());
+	}
 	
 	
 	

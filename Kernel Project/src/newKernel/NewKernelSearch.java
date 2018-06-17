@@ -126,7 +126,7 @@ public class NewKernelSearch
 		mainDistribution= new PopulationTools<Bucket>(buckets).getGaussianDistribution(average);
 		while(getRemainingTime()>0){
 			
-			
+			candidateThreshold=config.getCandidateThreshold();
 			ArrayList<Candidate> candidatesList = new ArrayList<>();
 			
 			
@@ -144,17 +144,18 @@ public class NewKernelSearch
 				}
 				ArrayList<Bucket> tempBucketList= SamplingTools.sampleWithTaboo(candidateThreshold-candidatesList.size(), mainDistribution);
 				if(tempBucketList==null){
-					System.out.println("Bucket insufficienti: troppi bucket non hanno superato il test per l'inserzione");
-					return;
+					
+					if(candidateThreshold>2) candidateThreshold-=1;
+					else solveEmergencyBucket();
+					buckets.stream().forEach(bucket -> {
+						
+						if(bucket.isTaboo()) bucket.setTaboo(false);
+						
+					});
+					
 				}
-//				if(samples!=null)  tempBucketList=samples;
-//				else {
-//					average=average+10;
-//					mainDistribution= new PopulationTools<Bucket>(buckets).getGaussianDistribution(average);
-//					samples= SamplingTools.sampleWithTaboo(candidateThreshold-candidatesList.size(), mainDistribution);
-//					tempBucketList=samples;
-//				}
-				
+
+				if(tempBucketList!=null){
 				for(Bucket b: tempBucketList){
 					System.out.println(buckets.indexOf(b));
 					if(poorBucketCount>=poorBucketLimit){
@@ -194,16 +195,17 @@ public class NewKernelSearch
 					}
 	
 				}
-				
+				}
 				for(Candidate c: candidatesList){
 					
 					if(c.getCurrentVersion().size()==maxBucketsInCandidate) c.setCompleted(true);
+					int nextPosition=c.getNextAdiacentPosition();
 					
 					if(!c.isCompleted()){
 						
 						
 						
-						Bucket tempBucket = buckets.get(c.getNextAdiacentPosition());
+						Bucket tempBucket = buckets.get(nextPosition);
 						c.addBucket(tempBucket);
 						
 						List<Item> toDisable = items.stream().filter(it -> !kernel.contains(it) && !c.mergeBuckets().contains(it)).collect(Collectors.toList());
@@ -232,6 +234,7 @@ public class NewKernelSearch
 					}
 					
 				}
+				
 				
 			}
 			
@@ -269,6 +272,7 @@ public class NewKernelSearch
 				if(model.hasSolution() && (model.getSolution().getObj() < bestKernelSolution.getObj() || bestKernelSolution.isEmpty()))
 				{
 					bestKernelSolution = model.getSolution();
+					model.exportSolution();
 					
 				}
 				
@@ -352,7 +356,45 @@ public class NewKernelSearch
 	}
 	
 	
+	private void solveEmergencyBucket()
+	{
+		for(Bucket b : buckets)
+		{
+			System.out.println("Solving emergency bucket: ");
+			List<Item> toDisable = items.stream().filter(it -> !kernel.contains(it) && !b.contains(it)).collect(Collectors.toList());
+
+			Model model = new Model(instPath, logPath, Math.min(tlimBucket, getRemainingTime()), config, false);	
+			model.buildModel();
+					
+			model.disableItems(toDisable);
+		//	model.addBucketConstraint(b.getItems()); // can we use this constraint regardless of the type of variables chosen as items?
+			
+			if(!bestSolution.isEmpty())
+			{
+					
+				model.readSolution(bestSolution);
+			}
+			
+			model.setCallback(callback);
+			model.solve();
+			
+			if(model.hasSolution() && (model.getSolution().getObj() < bestKernelSolution.getObj()  || bestKernelSolution.isEmpty()))
+			{
+				bestKernelSolution = model.getSolution();
+				List<Item> selected = model.getSelectedItems(b.getItems());
+				selected.forEach(it -> kernel.addItem(it));
+				selected.forEach(it -> b.removeItem(it));
+				model.exportSolution();
+				
+				if(model.getSolution().getObj()<bestSolution.getObj()||bestSolution.isEmpty()) {
+					bestSolution=model.getSolution();
+					model.exportSolution();
+			}
+			
+			break;
+
+		}	
+	}
 	
-	
-	
+	}
 }

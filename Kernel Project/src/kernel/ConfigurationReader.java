@@ -77,6 +77,9 @@ public class ConfigurationReader
         		case "EXTRACTIONPERC":
         			config.setExtractionPerc(Double.parseDouble(splitLine[1]));
         			break;
+        		case "POOLTABOOPERC":
+        			config.setPoolTabooPerc(Double.parseDouble(splitLine[1]));
+        			break;
         		case "PERCTHRESHOLD":
         			config.setPercThreshold(Double.parseDouble(splitLine[1]));
         			break;

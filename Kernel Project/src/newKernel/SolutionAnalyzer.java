@@ -20,10 +20,11 @@ public class SolutionAnalyzer {
 	private ArrayList<Item> itemsWithBindings;
 	private double plObj;
 	private double bestObj;
+	private double kernelObj;
 	
 
 	public SolutionAnalyzer(Bindings bindings, Solution sol, double plObj, 
-			double bestObj, EnumeratedDistribution<Item> distribution, ArrayList<Item> extractedItems, ArrayList<Item> itemsWithBindings){
+			double bestObj, EnumeratedDistribution<Item> distribution, ArrayList<Item> extractedItems, ArrayList<Item> itemsWithBindings, double kernelObj){
 		
 		this.bindings=bindings;
 		this.sol=sol;
@@ -34,6 +35,7 @@ public class SolutionAnalyzer {
 		this.bestObj=bestObj;
 		this.weightMap=distribution.getHashPmf();
 		this.itemsWithBindings=itemsWithBindings;
+		this.kernelObj=kernelObj;
 	}
 	
 	void updateBindings(){
@@ -101,34 +103,39 @@ public class SolutionAnalyzer {
 	
 	
 	HashMap<Item,Double> updateWeights(){
-		
-		double diff100=bestObj-plObj;
+		System.out.println("bestObj: "+bestObj);
+		System.out.println("kernelObj: "+ kernelObj);
+		System.out.println("plObj: "+plObj);
+		double diff100IfPositive=bestObj-plObj;
+		double diff100IfNegative=kernelObj-bestObj;
 		double solObj=sol.getObj();
 		double diffX=bestObj-solObj;
+		//System.out.println("diff100IfPositive: "+diff100IfPositive+"\n"+"diff100IfNegative: "+diff100IfPositive+"\n"+"solObj: "+solObj+"\n"+"diffX: "+diffX+"\n");
 		if(diffX>0){
-			double perc=diffX/diff100*100;
+			double perc=diffX/diff100IfPositive*100;
 			
 			for(Item a: activeItems){
 				weightMap.replace(a, weightMap.get(a)+perc);	
 			}
 			
 			for(Item a: disabledItems){
-				weightMap.replace(a, Math.max(0, weightMap.get(a)-perc/2));	
+				weightMap.replace(a, Math.max(0.00000000001, weightMap.get(a)-perc/2));	
 			}
 				
 		}
 		
 		
 		if(diffX<=0){
-			double perc=-diffX/diff100*100;
+			double perc=-diffX/diff100IfNegative*100;
+			System.out.println("Perc :"+perc);
 			
 			for(Item a: activeItems){
 				
-				weightMap.replace(a, weightMap.get(a)-perc);	
+				weightMap.replace(a, Math.max(0.00000000001, weightMap.get(a)-perc ));	
 			}
 			
 			for(Item a: disabledItems){
-				weightMap.replace(a, Math.max(0, weightMap.get(a)-perc*2 ));	
+				weightMap.replace(a, Math.max(0.00000000001, weightMap.get(a)-perc*2));	
 			}
 				
 		}

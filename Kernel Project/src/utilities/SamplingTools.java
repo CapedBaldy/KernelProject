@@ -20,7 +20,10 @@ public static <T> ArrayList<T> sampleWithoutReplacement(int sampleSize, Enumerat
 
 		HashSet<T> result = new HashSet<T>();
 		HashMap<T,Double> map = distrib.getHashPmf();
-		if (sampleSize > map.size()) return null;
+		if (sampleSize > map.size()) {
+			System.out.println("Dimensione enum insufficiente");
+			return null;
+		}
 		int updatedTSize=sampleSize;
 
 		while(result.size()!=sampleSize){

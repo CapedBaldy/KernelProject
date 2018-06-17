@@ -88,8 +88,9 @@ public class PoolAnalyzer {
 		
 		while(wastedIterations<=wastedIterLimit && checkStop()){
 			
+			System.out.println("Tempo generale rimasto: "+mainProcess.getRemainingTime());
 
-			Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), getRemainingTime(), mainProcess.getConfig(),false);
+			Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), Math.min(mainProcess.getRemainingTime(), getRemainingTime()), mainProcess.getConfig(),false);
 			model.buildModel();
 			model.setCallback(mainProcess.getCallback());
 			
@@ -116,16 +117,7 @@ public class PoolAnalyzer {
 			
 			MultipleNegativeItemBindingsCounter.entrySet().stream().filter(it->it.getValue()>=negativeThreshold).forEach(it->toDisable.add(it.getKey()));
 			
-//			for(ItemBinding i: internalBindings){
-//				if(i.negativeBindingCheck(extractThreshold, percThreshold)){
-////					if(weightMap.get(i.getItemA())>weightMap.get(i.getItemB())) toDisable.add(i.getItemB());
-////					if(weightMap.get(i.getItemA())<weightMap.get(i.getItemB())) toDisable.add(i.getItemA());
-////					if(weightMap.get(i.getItemA())==weightMap.get(i.getItemB())) toDisable.add(new Random().nextBoolean()? i.getItemA(): i.getItemB());
-//					
-//
-//				}
-//			}
-//			
+	
 			ArrayList<ItemBinding> externalBindings = bindings.searchExternalBinding(samples, notSamples);
 			HashMap<Item, ArrayList<ArrayList<Double>>> valuesArraysForItems = new HashMap<>();
 			HashMap<Item, Integer> MultiplePositiveItemBindingsCounter = new HashMap<>();
@@ -177,23 +169,6 @@ public class PoolAnalyzer {
 				
 	
 			
-
-			
-			
-//			for(ItemBinding i: externalBindings){
-//				
-//				Item toAdd = (notSamples.contains(i.getItemA()))? i.getItemA() : i.getItemB();
-//				ArrayList<Double> fixedvalues=i.fixedBindingCheck(toAdd, fixedThreshold);
-//				
-//				if(!fixedvalues.isEmpty()) {
-//					
-//					model.setFixedValue(toAdd, fixedvalues.get(new Random().nextInt(fixedvalues.size())));
-//					addedFixedItems.add(toAdd);
-//				}
-//				else if(i.activeBindingCheck(extractThreshold, percThreshold)) addedActiveItems.add(toAdd);
-//			}
-			
-			
 			toDisable.addAll(mainProcess.getItems().stream().filter(it->(!mainProcess.getKernel().contains(it) && !addedActiveItems.contains(it) && !addedFixedItems.contains(it) 
 					&& !samples.contains(it))).collect(Collectors.toList()));
 			//gli item contenuti in samples che devono essere esclusi sono già in toDisable
@@ -213,16 +188,19 @@ public class PoolAnalyzer {
 					if(model.getSolution().getObj()<mainProcess.getBestSolution().getObj()) model.exportSolution();
 				}
 				SolutionAnalyzer analyzer = new SolutionAnalyzer(bindings, model.getSolution(), LPSol.getObj(), mainProcess.getBestSolution().getObj(), 
-						poolDistribution, notFixedActiveItems, itemsWithBindings);
-				
+						poolDistribution, notFixedActiveItems, itemsWithBindings, mainProcess.getBestKernelSolution().getObj());
 				analyzer.updateBindings();
-				
 				HashMap<Item,Double> newWeightMap = analyzer.updateWeights();
 				
-				notFixedActiveItems.stream().forEach(it->it.setTabooCount((short) poolTabooCounter));
-				
+				if(mainProcess.getConfig().getPoolTabooPerc()==1) notFixedActiveItems.stream().forEach(it->it.setTabooCount((short) poolTabooCounter));
+				else{
+					PopulationTools<Item> pop =new PopulationTools<>(notFixedActiveItems);
+					EnumeratedDistribution<Item> equalProb = pop.getEqualProbDistribution();
+					ArrayList<Item> taboos= SamplingTools.sampleWithoutReplacement((int)Math.floor(notFixedActiveItems.size()*mainProcess.getConfig().getPoolTabooPerc()), equalProb);
+					taboos.stream().forEach(it->it.setTabooCount((short) poolTabooCounter));
+				}
+					
 				poolDistribution= new EnumeratedDistribution<>(newWeightMap);
-				
 				if(model.getSolution().getObj()<mainProcess.getBestSolution().getObj()) wastedIterations=0;
 				else wastedIterations++;
 				
@@ -246,7 +224,7 @@ public class PoolAnalyzer {
 	}
 		
 	boolean initialize(){
-		
+		System.out.println("Tempo generale rimasto: "+mainProcess.getRemainingTime());
 		//poolItems = new ArrayList<Item>();
 		HashSet<Item> tempPoolItems = new HashSet<>();
 		//ArrayList<Item> activeItemsInCandidates = new ArrayList<Item>();
@@ -263,7 +241,7 @@ public class PoolAnalyzer {
 		poolItems= new ArrayList<Item>(tempPoolItems);
 		ArrayList<Item> activeItemsInCandidates = new ArrayList<Item>(tempActiveItemsInCandidates);
 		
-		Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), getRemainingTime(), mainProcess.getConfig(),false); 
+		Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), Math.min(mainProcess.getRemainingTime(), getRemainingTime()), mainProcess.getConfig(),false); 
 		model.buildModel();
 		List<Item> toDisable= mainProcess.getItems().stream().filter(it->!mainProcess.getKernel().contains(it)&&!poolItems.contains(it)).collect(Collectors.toList());
 		model.disableItems(toDisable);
@@ -286,7 +264,8 @@ public class PoolAnalyzer {
 		ArrayList<Item> activeItemsInLPSol = new ArrayList<Item>(model.getSelectedItems(poolItems)); //confronta con i valori della soluzione del mdoello, non di Item.Xr
 		ArrayList<Item> mergedActiveItems= new ArrayList<Item>(activeItemsInLPSol.stream().filter(it->activeItemsInCandidates.contains(it)).collect(Collectors.toList())); //escludo automaticamente gli item contenuti nel kernel
 		ArrayList<Item> notMergedActiveItems= new ArrayList<Item>(poolItems.stream().filter(it->!mergedActiveItems.contains(it)).collect(Collectors.toList()));
-		notMergedActiveItems.stream().forEach(it->it.setPoolRc(model.getVarRC(it.getName()))); //inserisce i Rc e Xr relativi alla pool
+		notMergedActiveItems.stream().forEach(it->it.setPoolRc(model.getVarRC(it.getName()))); //inserisce i Rc e Xr relativi alla pool	
+		notMergedActiveItems.stream().filter(it->it.getPoolRc()==-1).forEach(it->it.setPoolRc(0));
 		notMergedActiveItems.stream().forEach(it->it.setPoolXr(model.getVarValue(it.getName())));
 		new ItemSorterByPoolValueAndAbsolutePoolRC().sort(notMergedActiveItems);
 		
@@ -306,7 +285,7 @@ public class PoolAnalyzer {
 	
 	boolean checkStop(){
 		
-		return (poolTimeLimit - Duration.between(startTime, Instant.now()).getSeconds())>0;
+		return (poolTimeLimit - Duration.between(startTime, Instant.now()).getSeconds())>0&&mainProcess.getRemainingTime()>0;
 	}
 	
 	int getRemainingTime(){

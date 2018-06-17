@@ -39,16 +39,24 @@ public class Candidate {
 	public int getNextAdiacentPosition(){
 		nextAdiacentBucket++;
 		
+		if(startPosition+nextAdiacentBucket/2==arrayLength&&startPosition-(int)Math.floor(nextAdiacentBucket/2)==-1) {
+				setCompleted(true);
+		}else{
 
 		if(nextAdiacentBucket % 2 == 0){
 			if(startPosition==arrayLength-1) return this.getNextAdiacentPosition();
+			if(startPosition+nextAdiacentBucket/2==arrayLength) return this.getNextAdiacentPosition();
 			return startPosition+nextAdiacentBucket/2;
 			
 		}
 		else {
 			if(startPosition==0) return this.getNextAdiacentPosition();
+			if(startPosition-(int)Math.floor(nextAdiacentBucket/2)==-1)
 			return startPosition-(int)Math.floor(nextAdiacentBucket/2);
 		}
+		}
+		
+		return 0;
 	}
 
 	

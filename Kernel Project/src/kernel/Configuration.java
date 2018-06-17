@@ -28,6 +28,7 @@ public class Configuration
 	private int maxBucketsInCandidate;
 	private short poorBucketLimit;
 	private int outputFlag;
+	private double poolTabooPerc;
 
 	public BucketBuilder getBucketBuilder()
 	{
@@ -271,6 +272,14 @@ public class Configuration
 
 	public void setOutputFlag(int outputFlag) {
 		this.outputFlag = outputFlag;
+	}
+
+	public double getPoolTabooPerc() {
+		return poolTabooPerc;
+	}
+
+	public void setPoolTabooPerc(double poolTabooPerc) {
+		this.poolTabooPerc = poolTabooPerc;
 	}
 	
 	

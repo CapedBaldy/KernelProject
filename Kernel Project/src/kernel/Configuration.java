@@ -29,6 +29,7 @@ public class Configuration
 	private short poorBucketLimit;
 	private int outputFlag;
 	private double poolTabooPerc;
+	private int totalLP;
 
 	public BucketBuilder getBucketBuilder()
 	{
@@ -280,6 +281,14 @@ public class Configuration
 
 	public void setPoolTabooPerc(double poolTabooPerc) {
 		this.poolTabooPerc = poolTabooPerc;
+	}
+
+	public int getTotalLP() {
+		return totalLP;
+	}
+
+	public void setTotalLP(int totalLP) {
+		this.totalLP = totalLP;
 	}
 	
 	

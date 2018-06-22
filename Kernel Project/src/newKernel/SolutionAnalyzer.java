@@ -109,6 +109,7 @@ public class SolutionAnalyzer {
 		double diff100IfPositive=bestObj-plObj;
 		double diff100IfNegative=kernelObj-bestObj;
 		double solObj=sol.getObj();
+		System.out.println("solObj: "+solObj);
 		double diffX=bestObj-solObj;
 		//System.out.println("diff100IfPositive: "+diff100IfPositive+"\n"+"diff100IfNegative: "+diff100IfPositive+"\n"+"solObj: "+solObj+"\n"+"diffX: "+diffX+"\n");
 		if(diffX>0){

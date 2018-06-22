@@ -147,11 +147,24 @@ public class NewKernelSearch
 					
 					if(candidateThreshold>2) candidateThreshold-=1;
 					else solveEmergencyBucket();
-					buckets.stream().forEach(bucket -> {
+					buckets.stream().filter(bucket -> {
+						
+						for(Candidate c: candidatesList){
+							if(c.getOriginalBucket()==bucket) return false;
+						}
+						
+						return true;
+						//break?
+					}).forEach(bucket->{
 						
 						if(bucket.isTaboo()) bucket.setTaboo(false);
-						
 					});
+					
+//					buckets.stream().forEach(bucket -> {
+//						
+//						if(bucket.isTaboo()) bucket.setTaboo(false);
+//						//break?
+//					});
 					
 				}
 
@@ -248,39 +261,45 @@ public class NewKernelSearch
 			PoolAnalyzer poolAnalyzer = new PoolAnalyzer(this, candidatesList);
 			if(poolAnalyzer.initialize()){
 				poolAnalyzer.analyzePool();
-				if(poolAnalyzer.getItemForKernel()!=null) poolAnalyzer.getItemForKernel().stream().forEach(it->{
+				
+				
+				if(!poolAnalyzer.getBestPoolSolution().isEmpty()&&(poolAnalyzer.getBestPoolSolution().getObj()<bestSolution.getObj() || bestSolution.isEmpty())) {
+					bestSolution=poolAnalyzer.getBestPoolSolution(); //già esportata in poolanalyzer
 					
-				kernel.addItem(it);
-				for(Bucket b: buckets){
-					if(b.contains(it)) b.removeItem(it);
-				}
-				
-				});
-				
-				if(!poolAnalyzer.getBestPoolSolution().isEmpty()&&(poolAnalyzer.getBestPoolSolution().getObj()<bestSolution.getObj() || bestSolution.isEmpty())) bestSolution=poolAnalyzer.getBestPoolSolution();
-				//già esportata in poolanalyzer
-				
-				Model model = new Model(instPath, logPath, Math.min(tlimKernel, getRemainingTime()), config, false);	
-				model.buildModel();
-				if(!bestSolution.isEmpty())
-					model.readSolution(bestSolution);
-				
-				List<Item> toDisable = items.stream().filter(it -> !kernel.contains(it)).collect(Collectors.toList());
-				model.disableItems(toDisable);
-				model.setCallback(callback);
-				model.solve();
-				if(model.hasSolution() && (model.getSolution().getObj() < bestKernelSolution.getObj() || bestKernelSolution.isEmpty()))
-				{
-					bestKernelSolution = model.getSolution();
-					model.exportSolution();
+					if(poolAnalyzer.getItemForKernel()!=null) poolAnalyzer.getItemForKernel().stream().forEach(it->{
+						
+						kernel.addItem(it);
+						for(Bucket b: buckets){
+							if(b.contains(it)) b.removeItem(it);
+						}
+						
+						});
+					
+					Model model = new Model(instPath, logPath, Math.min(tlimKernel, getRemainingTime()), config, false);	
+					model.buildModel();
+					if(!bestSolution.isEmpty())
+						model.readSolution(bestSolution);
+					
+					List<Item> toDisable = items.stream().filter(it -> !kernel.contains(it)).collect(Collectors.toList());
+					model.disableItems(toDisable);
+					model.setCallback(callback);
+					model.solve();
+					if(model.hasSolution() && (model.getSolution().getObj() < bestKernelSolution.getObj() || bestKernelSolution.isEmpty()))
+					{
+						bestKernelSolution = model.getSolution();
+						model.exportSolution();
+						
+					}
+							
+					if(model.getSolution().getObj() < bestSolution.getObj())  {
+						bestSolution=model.getSolution();
+						model.exportSolution();
+					}	
 					
 				}
 				
 				
-				if(model.getSolution().getObj() < bestSolution.getObj())  {
-					bestSolution=model.getSolution();
-					model.exportSolution();
-				}
+				
 			}
 			}
 			

@@ -191,6 +191,7 @@ public class PoolAnalyzer {
 						poolDistribution, notFixedActiveItems, itemsWithBindings, mainProcess.getBestKernelSolution().getObj());
 				analyzer.updateBindings();
 				HashMap<Item,Double> newWeightMap = analyzer.updateWeights();
+				System.out.println("NotFixedActiveItems: " +notFixedActiveItems.size());
 				
 				if(mainProcess.getConfig().getPoolTabooPerc()==1) notFixedActiveItems.stream().forEach(it->it.setTabooCount((short) poolTabooCounter));
 				else{
@@ -201,7 +202,8 @@ public class PoolAnalyzer {
 				}
 					
 				poolDistribution= new EnumeratedDistribution<>(newWeightMap);
-				if(model.getSolution().getObj()<mainProcess.getBestSolution().getObj()) wastedIterations=0;
+				//if(model.getSolution().getObj()<mainProcess.getBestSolution().getObj()) wastedIterations=0;
+				if((bestPoolSolution.isEmpty()||model.getSolution().getObj()<=bestPoolSolution.getObj())&&model.getSolution().getObj()<mainProcess.getBestSolution().getObj()) wastedIterations=0;
 				else wastedIterations++;
 				
 				
@@ -241,11 +243,23 @@ public class PoolAnalyzer {
 		poolItems= new ArrayList<Item>(tempPoolItems);
 		ArrayList<Item> activeItemsInCandidates = new ArrayList<Item>(tempActiveItemsInCandidates);
 		
-		Model model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), Math.min(mainProcess.getRemainingTime(), getRemainingTime()), mainProcess.getConfig(),false); 
-		model.buildModel();
+		Model model;
+		
+		if(mainProcess.getConfig().getTotalLP()==1){
+			model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), Math.min(mainProcess.getRemainingTime(), getRemainingTime()), mainProcess.getConfig(),true);
+			model.buildModel();
+		}
+		else{
+			
+			model = new Model(mainProcess.getInstPath(), mainProcess.getLogPath(), Math.min(mainProcess.getRemainingTime(), getRemainingTime()), mainProcess.getConfig(),false);
+			model.buildModel();
+			model.setContinuous(poolItems);
+		}
+		 
+		
 		List<Item> toDisable= mainProcess.getItems().stream().filter(it->!mainProcess.getKernel().contains(it)&&!poolItems.contains(it)).collect(Collectors.toList());
 		model.disableItems(toDisable);
-		model.setContinuous(poolItems);
+		
 		//model.setCallback(mainProcess.getCallback()); non metto callback, la soluzione è in parte rilassata
 		System.out.print("Solving partial LP relaxation :");
 		model.solve();

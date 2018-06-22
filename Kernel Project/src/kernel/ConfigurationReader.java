@@ -125,6 +125,9 @@ public class ConfigurationReader
         		case "OUTPUTFLAG":
         			config.setOutputFlag(Integer.parseInt(splitLine[1]));
         			break;
+        		case "TOTALLP":
+        			config.setTotalLP((Integer.parseInt(splitLine[1])));
+        			break;
         		case "KERNELBUILDER":
         			switch(Integer.parseInt(splitLine[1]))
         			{
